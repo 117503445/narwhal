@@ -1,0 +1,10 @@
+FROM python:3.8
+
+WORKDIR /workspace
+RUN pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/simple
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY debian.sources /etc/apt/sources.list.d/debian.sources
+RUN apt-get update && apt-get install -y tmux

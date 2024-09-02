@@ -47,27 +47,27 @@ class LocalBench:
             nodes, rate = self.nodes[0], self.rate[0]
 
             # Cleanup all files.
-            cmd = f'{CommandMaker.clean_logs()} ; {CommandMaker.cleanup()}'
-            subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
-            sleep(0.5)  # Removing the store may take time.
+            # cmd = f'{CommandMaker.clean_logs()} ; {CommandMaker.cleanup()}'
+            # subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+            # sleep(0.5)  # Removing the store may take time.
 
             # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
-            Print.info(f"About to run {cmd}...")
-            subprocess.run(cmd, check=True, cwd=PathMaker.node_crate_path())
+            # cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
+            # Print.info(f"About to run {cmd}...")
+            # subprocess.run(cmd, check=True, cwd=PathMaker.node_crate_path())
 
             # Create alias for the client and nodes binary.
-            cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
-            subprocess.run([cmd], shell=True)
+            # cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
+            # subprocess.run([cmd], shell=True)
 
             # Generate configuration files.
-            primary_keys = []
-            primary_key_files = [
-                PathMaker.primary_key_file(i) for i in range(nodes)]
-            for filename in primary_key_files:
-                cmd = CommandMaker.generate_key(filename).split()
-                subprocess.run(cmd, check=True)
-                primary_keys += [Key.from_file(filename)]
+            # primary_keys = []
+            # primary_key_files = [
+            #     PathMaker.primary_key_file(i) for i in range(nodes)]
+            # for filename in primary_key_files:
+            #     cmd = CommandMaker.generate_key(filename).split()
+            #     subprocess.run(cmd, check=True)
+            #     primary_keys += [Key.from_file(filename)]
 
             primary_names = [x.name for x in primary_keys]
             committee = LocalCommittee(primary_names, self.BASE_PORT)
