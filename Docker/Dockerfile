@@ -7,6 +7,7 @@ ARG BUILD_MODE="release"
 # Stage 0
 #################################################################
 FROM rust:1.62-slim-bullseye as chef
+COPY Docker/sources.list /etc/apt/sources.list
 WORKDIR "$WORKDIR/narwhal"
 ARG BUILD_MODE
 
@@ -85,7 +86,7 @@ RUN cargo build --${BUILD_MODE} --features ${FEATURES} --bin node --bin benchmar
 # Creat another layer so we can re-use caching
 FROM debian:bullseye-slim
 ARG BUILD_MODE
-
+COPY Docker/sources.list /etc/apt/sources.list
 WORKDIR "$WORKDIR/narwhal"
 
 # Copy the Narwhal node binary to bin folder
