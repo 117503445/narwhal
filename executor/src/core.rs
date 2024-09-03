@@ -174,6 +174,7 @@ where
 
         // Execute every transaction in the batch.
         let total_transactions = transactions.len();
+        println!("共识的这一批交易数量: {}", total_transactions);
         for (index, transaction) in transactions.into_iter().enumerate() {
             // Skip transactions that we already executed (after crash-recovery).
             if self
