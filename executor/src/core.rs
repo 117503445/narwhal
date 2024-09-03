@@ -84,6 +84,7 @@ where
 
     /// Main loop listening to new certificates and execute them.
     async fn run(&mut self) -> SubscriberResult<()> {
+        println!("QHT executor run");
         loop {
             tokio::select! {
                 // Execute all transactions associated with the consensus output message.

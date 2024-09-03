@@ -37,6 +37,8 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 
 #[tokio::main]
 async fn main() -> Result<(), eyre::Report> {
+    println!("qht Starting Narwhal...");
+
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about("A research implementation of Narwhal and Tusk.")
@@ -274,5 +276,6 @@ async fn run(
 async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedTransaction)>) {
     while let Some(_message) = rx_output.recv().await {
         // NOTE: Notify the user that its transaction has been processed.
+        // println!("Transaction processed, length: {}", _message.0.len());
     }
 }

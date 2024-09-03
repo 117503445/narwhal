@@ -1,0 +1,15 @@
+# docker-compose.yml
+
+services:
+  narwhal-coding-dev:
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    volumes:
+        - ./:/workspace
+        - narwhal-coding-dev-vsc:/root/.vscode-server
+    stdin_open: true
+    tty: true
+
+volumes:
+  narwhal-coding-dev-vsc:

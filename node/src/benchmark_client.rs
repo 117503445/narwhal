@@ -17,6 +17,7 @@ use url::Url;
 
 #[tokio::main]
 async fn main() -> Result<(), eyre::Report> {
+    println!("QHT {} v{}", crate_name!(), crate_version!());
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about("Benchmark client for Narwhal and Tusk.")
