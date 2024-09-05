@@ -16,4 +16,4 @@ docker run -it --rm -v $PWD/Cargo.toml:/workspace/Cargo.toml -v $PWD/Cargo.lock:
 
 
 docker run -it --rm -v $PWD:/workspace sui-builder bash
-cargo build --features="benchmark" --bin node --bin benchmark_client
+cargo build --target-dir docker-target --features="benchmark" --bin node --bin benchmark_client 

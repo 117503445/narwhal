@@ -1,4 +1,4 @@
-name: narwhal
+name: narwhal-nodes
 
 services:
   # Setup for Validator 0. A primary node and a worker

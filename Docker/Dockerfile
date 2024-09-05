@@ -108,11 +108,11 @@ COPY Docker/sources.list /etc/apt/sources.list
 WORKDIR "/workspace"
 
 # Copy the Narwhal node binary to bin folder
-COPY ./target/debug/node bin/
+COPY ./docker-target/debug/node bin/
 
 # This is used for testing a cluster by generating load.
 # We use this in our k8s cluster deployed alongside the workers and validators.
-COPY ./target/debug/benchmark_client bin/
+COPY ./docker-target/debug/benchmark_client bin/
 
 # Copy the entry point file
 COPY Docker/entry.sh ./
