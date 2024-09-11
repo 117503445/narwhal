@@ -3,10 +3,7 @@ name: narwhal-nodes
 services:
   # Setup for Validator 0. A primary node and a worker
   primary_0:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
-    image: narwhal-node:latest
+    image: 117503445/narwhal
     environment:
       - NODE_TYPE=primary
       - VALIDATOR_ID=0
@@ -21,13 +18,11 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-0/logs:/home/logs
+    init: true
   worker_0:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
+    image: 117503445/narwhal
     depends_on:
       - primary_0
-    image: narwhal-node:latest
     environment:
       - NODE_TYPE=worker
       - VALIDATOR_ID=0
@@ -42,12 +37,10 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-0/logs:/home/logs
+    init: true
   # Setup for Validator 1. A primary node and a worker
   primary_1:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
-    image: narwhal-node:latest
+    image: 117503445/narwhal
     environment:
       - NODE_TYPE=primary
       - VALIDATOR_ID=1
@@ -62,13 +55,11 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-1/logs:/home/logs
+    init: true
   worker_1:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
+    image: 117503445/narwhal
     depends_on:
       - primary_1
-    image: narwhal-node:latest
     environment:
       - NODE_TYPE=worker
       - VALIDATOR_ID=1
@@ -83,12 +74,10 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-1/logs:/home/logs
+    init: true
   # Setup for Validator 2. A primary node and a worker
   primary_2:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
-    image: narwhal-node:latest
+    image: 117503445/narwhal
     environment:
       - NODE_TYPE=primary
       - VALIDATOR_ID=2
@@ -103,13 +92,11 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-2/logs:/home/logs
+    init: true
   worker_2:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
+    image: 117503445/narwhal
     depends_on:
       - primary_2
-    image: narwhal-node:latest
     environment:
       - NODE_TYPE=worker
       - VALIDATOR_ID=2
@@ -124,12 +111,10 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-2/logs:/home/logs
+    init: true
   # Setup for Validator 3. A primary node and a worker
   primary_3:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
-    image: narwhal-node:latest
+    image: 117503445/narwhal
     environment:
       - NODE_TYPE=primary
       - VALIDATOR_ID=3
@@ -144,13 +129,11 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-3/logs:/home/logs
+    init: true
   worker_3:
-    build:
-      context: ../
-      dockerfile: ./Docker/Dockerfile
+    image: 117503445/narwhal
     depends_on:
       - primary_3
-    image: narwhal-node:latest
     environment:
       - NODE_TYPE=worker
       - VALIDATOR_ID=3
@@ -165,3 +148,4 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-3/logs:/home/logs
+    init: true

@@ -10,4 +10,6 @@ ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 
 COPY ./Docker/config.toml /root/.cargo/config
 
+ENTRYPOINT [ "sleep", "infinity" ]
+
 WORKDIR /workspace

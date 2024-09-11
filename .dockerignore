@@ -7,3 +7,4 @@ target
 !target/debug/node
 !target/debug/benchmark_client
 benchmark
+.git

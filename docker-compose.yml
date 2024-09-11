@@ -10,6 +10,16 @@ services:
         - narwhal-coding-dev-vsc:/root/.vscode-server
     stdin_open: true
     tty: true
+  builder:
+    build:
+      context: ./
+      dockerfile: ./Docker/Dockerfile.builder
+    container_name: narwhal-builder
+    volumes:
+        - ./:/workspace
+    # stdin_open: true
+    # tty: true
+    init: true
 
 volumes:
   narwhal-coding-dev-vsc:

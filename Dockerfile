@@ -118,4 +118,4 @@ COPY ./docker-target/debug/benchmark_client bin/
 COPY Docker/entry.sh ./
 
 # Now add the entry point
-CMD ./entry.sh
+CMD ["./entry.sh"]
