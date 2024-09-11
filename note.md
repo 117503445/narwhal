@@ -25,3 +25,5 @@ replace-with = 'mirror'
 
 [source.mirror]
 registry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"
+
+code --install-extension rust-lang.rust-analyzer@0.3.1394
