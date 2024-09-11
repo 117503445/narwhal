@@ -38,6 +38,7 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 #[tokio::main]
 async fn main() -> Result<(), eyre::Report> {
     println!("qht Starting Narwhal...");
+    dbg!("qht Narwhal starting...");
 
     let matches = App::new(crate_name!())
         .version(crate_version!())
@@ -173,7 +174,8 @@ fn setup_benchmark_telemetry(
     let subscriber_builder = tracing_subscriber::fmt::Subscriber::builder()
         .with_env_filter(env_filter)
         .with_timer(timer)
-        .with_ansi(false);
+        .with_ansi(false)
+        .with_line_number(true);
     let subscriber = subscriber_builder.with_writer(std::io::stderr).finish();
     set_global_default(subscriber).expect("Failed to set subscriber");
     Ok(())

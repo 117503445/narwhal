@@ -17,3 +17,11 @@ docker run -it --rm -v $PWD/Cargo.toml:/workspace/Cargo.toml -v $PWD/Cargo.lock:
 
 docker run -it --rm -v $PWD:/workspace sui-builder bash
 cargo build --target-dir docker-target --features="benchmark" --bin node --bin benchmark_client 
+
+rustup default nightly
+
+[source.crates-io]
+replace-with = 'mirror'
+
+[source.mirror]
+registry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"

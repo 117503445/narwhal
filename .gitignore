@@ -1,4 +1,5 @@
 *.json
+!.vscode/settings.json
 *.python-version
 !Docker/**/*.json
 Docker/validators/**/db-*

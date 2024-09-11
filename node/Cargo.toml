@@ -53,6 +53,7 @@ structopt = "0.3.26"
 test_utils = { path = "../test_utils" }
 
 [features]
+default = ["benchmark"]
 benchmark = ["worker/benchmark", "primary/benchmark", "consensus/benchmark"]
 dhat-heap = ["dhat"]    # if you are doing heap profiling
 

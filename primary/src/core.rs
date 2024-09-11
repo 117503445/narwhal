@@ -329,6 +329,7 @@ impl Core {
                 .with_label_values(&[&certificate.epoch().to_string()])
                 .inc();
 
+
             // Process the new certificate.
             match self.process_certificate(certificate).await {
                 Ok(()) => (),
@@ -343,9 +344,10 @@ impl Core {
     #[instrument(level = "debug", skip_all)]
     async fn process_certificate(&mut self, certificate: Certificate) -> DagResult<()> {
         debug!(
-            "Processing {:?} round:{:?}",
+            "Processing certificate {:?} round:{:?}, len: {:?}",
             certificate,
-            certificate.round()
+            certificate.round(),
+            certificate.header.payload.len(),
         );
 
         // Let the proposer draw early conclusions from a certificate at this round and epoch, without its
