@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/117503445/goutils v0.0.0-20240817175023-c208c6d669ae // indirect
+	github.com/alecthomas/kong v1.2.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.1.0 // indirect
