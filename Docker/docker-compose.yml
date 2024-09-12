@@ -18,6 +18,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-0/logs:/home/logs
+      - ./logs:/logs
     init: true
   worker_0:
     image: 117503445/narwhal
@@ -37,6 +38,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-0/logs:/home/logs
+      - ./logs:/logs
     init: true
   # Setup for Validator 1. A primary node and a worker
   primary_1:
@@ -55,6 +57,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-1/logs:/home/logs
+      - ./logs:/logs
     init: true
   worker_1:
     image: 117503445/narwhal
@@ -74,6 +77,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-1/logs:/home/logs
+      - ./logs:/logs
     init: true
   # Setup for Validator 2. A primary node and a worker
   primary_2:
@@ -92,6 +96,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-2/logs:/home/logs
+      - ./logs:/logs
     init: true
   worker_2:
     image: 117503445/narwhal
@@ -111,6 +116,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-2/logs:/home/logs
+      - ./logs:/logs
     init: true
   # Setup for Validator 3. A primary node and a worker
   primary_3:
@@ -129,6 +135,7 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-3/logs:/home/logs
+      - ./logs:/logs
     init: true
   worker_3:
     image: 117503445/narwhal
@@ -148,4 +155,5 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-3/logs:/home/logs
+      - ./logs:/logs
     init: true

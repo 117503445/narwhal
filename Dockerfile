@@ -103,7 +103,7 @@
 # CMD ./entry.sh
 
 
-FROM debian:bullseye-slim
+FROM registry.cn-hangzhou.aliyuncs.com/117503445-mirror/sync:linux.amd64.docker.io.library.debian.bullseye-slim
 COPY Docker/sources.list /etc/apt/sources.list
 WORKDIR "/workspace"
 
