@@ -481,7 +481,7 @@ impl WorkerToWorker for WorkerReceiverHandler {
         &self,
         request: Request<BincodeEncodedPayload>,
     ) -> Result<Response<Empty>, Status> {
-        println!("qht worker_receiver_handler send_message");
+        // info!("qht WorkerReceiverHandler.send_message");
 
         let message: WorkerMessage = request
             .get_ref()

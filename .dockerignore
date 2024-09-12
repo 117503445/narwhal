@@ -6,5 +6,8 @@
 target
 !target/debug/node
 !target/debug/benchmark_client
+docker-target
+!docker-target/debug/node
+!docker-target/debug/benchmark_client
 benchmark
 .git
