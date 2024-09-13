@@ -117,5 +117,8 @@ COPY ./docker-target/debug/benchmark_client bin/
 # Copy the entry point file
 COPY Docker/entry.sh ./
 
+# 设置为 UTC-8 时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
+
 # Now add the entry point
 CMD ["./entry.sh"]
