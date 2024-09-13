@@ -30,6 +30,24 @@ use tracing::info;
 use tracing::subscriber::set_global_default;
 #[cfg(feature = "benchmark")]
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+// use chrono::Local;
+use tracing_subscriber::{
+    self,
+    fmt::{format::Writer, time::FormatTime},
+};
+
+struct LocalTimer;
+
+fn east8() -> Option<chrono::FixedOffset> {
+    chrono::FixedOffset::east_opt(8 * 3600)
+}
+
+impl FormatTime for LocalTimer {
+    fn format_time(&self, w: &mut Writer<'_>) -> std::fmt::Result {
+        let now = chrono::Utc::now().with_timezone(&east8().unwrap());
+        write!(w, "{}", now.format("%FT%T%.3f"))
+    }
+}
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -170,10 +188,10 @@ fn setup_benchmark_telemetry(
 
     let env_filter = EnvFilter::try_from_default_env().unwrap_or(filter);
 
-    let timer = tracing_subscriber::fmt::time::UtcTime::rfc_3339();
+    // let timer = tracing_subscriber::fmt::time::UtcTime::rfc_3339();
     let subscriber_builder = tracing_subscriber::fmt::Subscriber::builder()
         .with_env_filter(env_filter)
-        .with_timer(timer)
+        .with_timer(LocalTimer)
         .with_ansi(false)
         .with_line_number(true);
     let subscriber = subscriber_builder.with_writer(std::io::stderr).finish();
