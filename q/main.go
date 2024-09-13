@@ -43,7 +43,7 @@ func (b *BuildCmd) Run(ctx *Context) error {
 		log.Fatal().Err(err).Msg("run cmd failed")
 	}
 
-	if err := cmd("../Docker", "docker compose up -d"); err != nil {
+	if err := cmd("../Docker", "docker compose up -d --build"); err != nil {
 		log.Fatal().Err(err).Msg("run cmd failed")
 	}
 

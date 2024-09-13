@@ -32,11 +32,13 @@ else
   fi
 fi
 
+echo "NODE_BIN=$NODE_BIN, PRIMARY_KEYS_PATH=$PRIMARY_KEYS_PATH, WORKER_KEYS_PATH=$WORKER_KEYS_PATH, COMMITTEE_PATH=$COMMITTEE_PATH, WORKERS_PATH=$WORKERS_PATH, PARAMETERS_PATH=$PARAMETERS_PATH, DATA_PATH=$DATA_PATH"
+
 # If this is a primary node, then run as primary
 if [[ "$NODE_TYPE" = "primary" ]]; then
   echo "Bootstrapping primary node"
 
-  LOG_PATH="${DATA_PATH}/validator-$VALIDATOR_ID/primary.log"
+  LOG_PATH="/logs/validator-$VALIDATOR_ID-primary.log"
   echo "" > $LOG_PATH
 
   $NODE_BIN $LOG_LEVEL run \
@@ -65,3 +67,4 @@ else
   echo "Unknown provided value for parameter: NODE_TYPE=$NODE_TYPE"
   exit 1
 fi
+

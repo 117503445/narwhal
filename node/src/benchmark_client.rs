@@ -171,7 +171,7 @@ impl Client {
                 TransactionProto { transaction: bytes }
             });
 
-            if let Err(e) = client.submit_transaction_stream(stream).await {
+    if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
                 break 'main;
             }

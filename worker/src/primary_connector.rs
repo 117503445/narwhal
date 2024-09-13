@@ -61,7 +61,14 @@ impl PrimaryConnector {
                         .primary(&self.name)
                         .expect("Our public key is not in the committee")
                         .worker_to_primary;
-                    let handle = self.primary_client.send(address, &digest).await;
+                        let address_clone = address.clone();
+                        let handle = self.primary_client.send(address, &digest).await;
+                    tracing::info!("qht Sent {digest:?} to {address}", address = address_clone);
+
+                    // handle 是什么？handle 的类型是 CancelOnDropHandler<Result<tonic::Response<types::Empty>, eyre::Report>>
+
+
+
                     futures.push(handle);
                 },
 
@@ -82,7 +89,12 @@ impl PrimaryConnector {
                     tracing::debug!("Committee updated to {}", self.committee);
                 }
 
-                Some(_result) = futures.next() => ()
+                Some(_result) = futures.next() => (
+                    match _result {
+                        Ok(_) => tracing::info!("qht Sent to primary"),
+                        Err(e) => tracing::error!("qht Failed to send, err = {e}"),
+                    }
+                )
             }
         }
     }

@@ -6,6 +6,7 @@ use multiaddr::Multiaddr;
 use rand::prelude::{SliceRandom, SmallRng};
 use serde::Serialize;
 use tokio::task::JoinHandle;
+use tracing::info;
 use types::BincodeEncodedPayload;
 
 use crate::{CancelOnDropHandler, MessageResult};
@@ -79,6 +80,7 @@ pub trait ReliableNetwork: BaseNetwork {
         address: Multiaddr,
         message: &Self::Message,
     ) -> CancelOnDropHandler<MessageResult> {
+        info!("qht ReliableNetwork.send");
         let message =
             BincodeEncodedPayload::try_from(message).expect("Failed to serialize payload");
         self.send_message(address, message).await
