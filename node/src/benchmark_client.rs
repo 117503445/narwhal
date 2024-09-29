@@ -87,7 +87,7 @@ async fn main() -> Result<(), eyre::Report> {
     let client = Client {
         target,
         size,
-        rate,
+        rate: 2,
         nodes,
     };
 
@@ -110,12 +110,13 @@ impl Client {
         // We are distributing the transactions that need to be sent
         // within a second to sub-buckets. The precision here represents
         // the number of such buckets within the period of 1 second.
-        const PRECISION: u64 = 20;
+        const PRECISION: u64 = 1;
         // The BURST_DURATION represents the period for each bucket we
         // have split. For example if precision is 20 the 1 second (1000ms)
         // will be split in 20 buckets where each one will be 50ms apart.
         // Basically we are looking to send a list of transactions every 50ms.
         const BURST_DURATION: u64 = 1000 / PRECISION;
+
 
         let burst = self.rate / PRECISION;
 
@@ -139,8 +140,8 @@ impl Client {
             .context(format!("failed to connect to {}", self.target))?;
 
         // Submit all transactions.
-        let mut counter = 0;
-        let mut r = rand::thread_rng().gen();
+        // let mut counter = 0;
+        // let mut r = rand::thread_rng().gen();
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
@@ -154,17 +155,23 @@ impl Client {
             let mut tx = BytesMut::with_capacity(self.size);
             let size = self.size;
             let stream = tokio_stream::iter(0..burst).map(move |x| {
-                if x == counter % burst {
-                    // NOTE: This log entry is used to compute performance.
-                    info!("Sending sample transaction {counter}");
+                // if x == counter % burst {
+                //     // NOTE: This log entry is used to compute performance.
+                //     info!("Sending sample transaction, counter = {counter}, burst = {burst}");
 
-                    tx.put_u8(0u8); // Sample txs start with 0.
-                    tx.put_u64(counter); // This counter identifies the tx.
-                } else {
-                    r += 1;
-                    tx.put_u8(1u8); // Standard txs start with 1.
-                    tx.put_u64(r); // Ensures all clients send different txs.
-                };
+                //     tx.put_u8(0u8); // Sample txs start with 0.
+                //     tx.put_u64(counter); // This counter identifies the tx.
+                // } else {
+
+                //     info!("Qht Sending different transaction");
+
+                //     r += 1;
+                //     tx.put_u8(1u8); // Standard txs start with 1.
+                //     tx.put_u64(r); // Ensures all clients send different txs.
+                // };
+                info!("Sending sample transaction");
+                tx.put_u8(1u8); // Standard txs start with 1.
+                tx.put_u64(0); // Ensures all clients send different txs.
 
                 tx.resize(size, 0u8);
                 let bytes = tx.split().freeze();
@@ -180,7 +187,9 @@ impl Client {
                 // NOTE: This log entry is used to compute performance.
                 warn!("Transaction rate too high for this client");
             }
-            counter += 1;
+            // counter += 1;
+
+            break;
         }
         Ok(())
     }
