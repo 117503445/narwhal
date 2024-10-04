@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/117503445/goutils"
 	"github.com/alecthomas/kong"
+	"github.com/rs/zerolog/log"
 	// "github.com/rs/zerolog/log"
 )
 
@@ -55,7 +56,16 @@ type Dev0CMD struct {
 }
 
 func (r *Dev0CMD) Run(ctx *Context) error {
-	
+	log.Debug().Msg("dev-0")
+
+	goutils.Exec("go build .", goutils.WithCwd("./assets/fc-worker"), goutils.WithEnv(map[string]string{
+		"GOOS":        "linux",
+		"GOARCH":      "amd64",
+		"CGO_ENABLED": "0",
+	}))
+
+	goutils.Exec("docker compose exec -T --workdir /workspace/q/assets/fc-worker fc s deploy -y", goutils.WithCwd("../"))
+
 	return nil
 }
 
