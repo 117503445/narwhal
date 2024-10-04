@@ -20,6 +20,15 @@ services:
     # stdin_open: true
     # tty: true
     init: true
+  fc:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.fc
+    volumes:
+        - ./:/workspace
+    stdin_open: true
+    tty: true
+    init: true
 
 volumes:
   narwhal-coding-dev-vsc:

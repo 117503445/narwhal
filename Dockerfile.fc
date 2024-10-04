@@ -1,0 +1,7 @@
+FROM node:22-bookworm
+
+RUN npm config set registry https://registry.npmmirror.com && npm install @serverless-devs/s -g
+
+WORKDIR /workspace
+
+ENTRYPOINT [ "bash" ]
