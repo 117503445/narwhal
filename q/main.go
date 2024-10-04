@@ -27,7 +27,6 @@ func (b *BuildCmd) Run(ctx *Context) error {
 
 	goutils.Exec("docker compose up -d", goutils.WithCwd("../"))
 
-
 	// -T 避免 the input device is not a TTY
 	goutils.Exec("docker compose exec -T builder cargo build --target-dir docker-target --bin node --bin benchmark_client", goutils.WithCwd("../"))
 
@@ -52,10 +51,19 @@ func (r *ReqCMD) Run(ctx *Context) error {
 	return nil
 }
 
+type Dev0CMD struct {
+}
+
+func (r *Dev0CMD) Run(ctx *Context) error {
+	
+	return nil
+}
+
 var cli struct {
 	DefaultCmd DefaultCmd `cmd:"" hidden:"" default:"1"`
 	Build      BuildCmd   `cmd:""`
 	Req        ReqCMD     `cmd:""`
+	Dev0       Dev0CMD    `cmd:""`
 }
 
 func main() {
