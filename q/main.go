@@ -79,6 +79,8 @@ var cli struct {
 func main() {
 	goutils.InitZeroLog()
 
+	goutils.ExecOpt.DumpOutput = true
+
 	ctx := kong.Parse(&cli)
 
 	err := ctx.Run(&Context{})
