@@ -31,7 +31,7 @@ use fastcrypto::{
 use multiaddr::{Multiaddr, Protocol};
 use network::{metrics::Metrics, PrimaryNetwork, PrimaryToWorkerNetwork};
 use prometheus::Registry;
-use std::{collections::BTreeMap, net::Ipv4Addr, sync::Arc};
+use std::{collections::BTreeMap, env, net::Ipv4Addr, sync::Arc};
 use storage::CertificateStore;
 use store::Store;
 use tokio::{sync::watch, task::JoinHandle};
@@ -476,6 +476,19 @@ impl Primary {
         if let Some(h) = consensus_api_handle {
             handles.push(h);
         }
+
+		// 尝试读取环境变量 VALIDATOR_ID
+		match env::var("VALIDATOR_ID") {
+			Ok(validator_id) => {
+				info!("VALIDATOR_ID: {}", validator_id);
+				// 在这里使用 validator_id 变量
+				// todo
+			}
+			Err(e) => {
+				eprintln!("Error reading VALIDATOR_ID: {}", e);
+				// 处理错误，例如设置一个默认值或终止程序
+			}
+		}
 
         handles
     }
