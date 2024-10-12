@@ -10,6 +10,9 @@ services:
         - narwhal-coding-dev-vsc:/root/.vscode-server
     stdin_open: true
     tty: true
+    environment:
+      - HTTP_PROXY=http://192.168.100.1:10809
+      - HTTPS_PROXY=http://192.168.100.1:10809
   builder:
     build:
       context: ./
