@@ -29,6 +29,16 @@ services:
     stdin_open: true
     tty: true
     init: true
+  q-dev:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.q
+    volumes:
+        - ./:/workspace
+    stdin_open: true
+    tty: true
+    init: true
+
 
 volumes:
   narwhal-coding-dev-vsc:
