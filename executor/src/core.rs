@@ -143,7 +143,7 @@ where
                 .execution_indices
                 .check_next_batch_index(index as SequenceNumber)
             {
-                self.execute_batch(message, certificate_id, *digest, total_batches)
+                self.execute_batch(message, certificate_id, *digest, total_batches, index)
                     .await?;
             }
         }
@@ -157,6 +157,7 @@ where
         certificate_id: CertificateDigest,
         batch_digest: BatchDigest,
         total_batches: usize,
+        index: usize,
     ) -> SubscriberResult<()> {
         // The store should now hold all transaction data referenced by the input certificate.
         let transactions = match self.store.read((certificate_id, batch_digest)).await? {
@@ -175,7 +176,7 @@ where
 
         // Execute every transaction in the batch.
         let total_transactions = transactions.len();
-        println!("共识的这一批交易数量: {}", total_transactions);
+        println!("共识的这一批交易数量: {}, index: {}, batch_digest: {}", total_transactions, index, batch_digest);
         for (index, transaction) in transactions.into_iter().enumerate() {
             // Skip transactions that we already executed (after crash-recovery).
             if self
