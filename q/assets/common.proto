@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package q;
+option go_package = "./rpc";
+
+// 导入 Empty 消息类型
+import "google/protobuf/empty.proto";
+// import "google/protobuf/any.proto";
+
+// Haberdasher service makes hats for clients.
+service Executor {
+  // MakeHat produces a hat of mysterious, randomly-selected color!
+  // rpc MakeHat(Size) returns (Hat);
+
+  rpc PutExecuteInfo(ExecuteInfo) returns (google.protobuf.Empty);
+
+//   rpc GetBuildInfo(google.protobuf.Empty) returns (BuildInfo);
+
+//   rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+}
+
+message ExecuteInfo {
+    int32 ConsensusRound = 1;
+    int32 ExecuteHeight = 2;
+}
+
+// Size of a Hat, in inches.
+// message Size {
+//   int32 inches = 1; // must be > 0
+// }
+
+// A Hat is a piece of headwear made by a Haberdasher.
+// message Hat {
+//   int32 inches = 1;
+//   string color = 2; // anything but "invisible"
+//   string name = 3; // i.e. "bowler"
+// }
+
+// message BuildInfo {
+//   map<string, string> meta = 1;
+//   string version = 2;
+// }
+
+// message CreateEventRequest {
+//   map<string, google.protobuf.Any> data = 1;
+//   string type = 2;
+// }
+
+// message CreateEventResponse {
+//   string id = 1;
+// }
