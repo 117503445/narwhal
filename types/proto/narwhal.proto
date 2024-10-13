@@ -134,7 +134,7 @@ message BincodeEncodedPayload {
 // Empty message for when we don't have anything to return
 message Empty {}
 
-message Q {}
+
 
 
 // The consensus to mempool interface for validator actions.
@@ -193,4 +193,25 @@ service Transactions {
 
     // Submit a Transactions
     rpc SubmitTransactionStream(stream Transaction) returns (Empty) {}
+}
+
+
+import "google/protobuf/empty.proto";
+// import "google/protobuf/any.proto";
+
+// Haberdasher service makes hats for clients.
+service Executor {
+  // MakeHat produces a hat of mysterious, randomly-selected color!
+  // rpc MakeHat(Size) returns (Hat);
+
+  rpc PutExecuteInfo(ExecuteInfo) returns (google.protobuf.Empty);
+
+//   rpc GetBuildInfo(google.protobuf.Empty) returns (BuildInfo);
+
+//   rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+}
+
+message ExecuteInfo {
+    int32 ConsensusRound = 1;
+    int32 ExecuteHeight = 2;
 }

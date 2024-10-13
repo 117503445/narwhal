@@ -38,7 +38,7 @@ pub use narwhal::{
     NewEpochRequest, NewNetworkInfoRequest, NodeReadCausalRequest, NodeReadCausalResponse,
     PrimaryAddresses as PrimaryAddressesProto, PublicKey as PublicKeyProto, ReadCausalRequest,
     ReadCausalResponse, RemoveCollectionsRequest, RoundsRequest, RoundsResponse,
-    Transaction as TransactionProto, ValidatorData,
+    Transaction as TransactionProto, ValidatorData, ExecuteInfo
 };
 
 impl From<PublicKey> for PublicKeyProto {
