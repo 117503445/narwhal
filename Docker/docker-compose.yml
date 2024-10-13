@@ -40,6 +40,18 @@ services:
       - ./validators/validator-0/logs:/home/logs
       - ./logs:/logs
     init: true
+  qexecutor_0:
+    image: 117503445/narwhal
+    depends_on:
+      - primary_0
+    environment:
+      - NODE_TYPE=qexecutor
+      - WORKER_ID=0
+    volumes:
+      - ./validators:/validators
+      - ./validators/validator-0/logs:/home/logs
+      - ./logs:/logs
+    init: true
   # Setup for Validator 1. A primary node and a worker
   primary_1:
     image: 117503445/narwhal
@@ -77,6 +89,18 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-1/logs:/home/logs
+      - ./logs:/logs
+    init: true
+  qexecutor_1:
+    image: 117503445/narwhal
+    depends_on:
+      - primary_1
+    environment:
+      - NODE_TYPE=qexecutor
+      - WORKER_ID=1
+    volumes:
+      - ./validators:/validators
+      - ./validators/validator-0/logs:/home/logs
       - ./logs:/logs
     init: true
   # Setup for Validator 2. A primary node and a worker
@@ -118,6 +142,18 @@ services:
       - ./validators/validator-2/logs:/home/logs
       - ./logs:/logs
     init: true
+  qexecutor_2:
+    image: 117503445/narwhal
+    depends_on:
+      - primary_2
+    environment:
+      - NODE_TYPE=qexecutor
+      - WORKER_ID=2
+    volumes:
+      - ./validators:/validators
+      - ./validators/validator-0/logs:/home/logs
+      - ./logs:/logs
+    init: true
   # Setup for Validator 3. A primary node and a worker
   primary_3:
     image: 117503445/narwhal
@@ -155,5 +191,17 @@ services:
     volumes:
       - ./validators:/validators
       - ./validators/validator-3/logs:/home/logs
+      - ./logs:/logs
+    init: true
+  qexecutor_3:
+    image: 117503445/narwhal
+    depends_on:
+      - primary_3
+    environment:
+      - NODE_TYPE=qexecutor
+      - WORKER_ID=3
+    volumes:
+      - ./validators:/validators
+      - ./validators/validator-0/logs:/home/logs
       - ./logs:/logs
     init: true

@@ -19,6 +19,10 @@ func (b *BuildCmd) Run() error {
 	// -T 避免 the input device is not a TTY
 	goutils.Exec("docker compose exec -T builder cargo build --target-dir docker-target --bin node --bin benchmark_client", goutils.WithCwd("../"))
 
+	goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
+
+	goutils.Exec("docker compose exec -T q-dev /workspace/q/script/proto.sh", goutils.WithCwd("../"))
+
 	goutils.Exec("docker build -t 117503445/narwhal .", goutils.WithCwd("../"))
 
 	goutils.Exec("docker compose up -d --build", goutils.WithCwd("../Docker"))

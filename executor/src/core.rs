@@ -180,7 +180,7 @@ where
         println!("共识的这一批交易数量: {}, index: {}, batch_digest: {}", total_transactions, index, batch_digest);
 
         // let mut q_client = ExecutorClient::connect("http://localhost:50051").await?;
-        let mut q_client = ExecutorClient::connect("http://localhost:50051").await.map_err(|e| {
+        let mut q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
             SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
         })?;
         let request = tonic::Request::new(ExecuteInfo{

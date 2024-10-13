@@ -63,6 +63,13 @@ elif [[ "$NODE_TYPE" = "worker" ]]; then
   --store "${DATA_PATH}/validator-$VALIDATOR_ID/db-worker-$WORKER_ID" \
   --parameters $PARAMETERS_PATH \
   worker --id $WORKER_ID > $LOG_PATH 2>&1
+elif [[ "$NODE_TYPE" = "qexecutor" ]]; then
+  echo "Bootstrapping new qexecutor node with id $WORKER_ID"
+
+  LOG_PATH="/logs/validator-$VALIDATOR_ID-qexecutor-$WORKER_ID.log"
+  echo "" > $LOG_PATH
+
+  ./bin/q executor > $LOG_PATH 2>&1
 else
   echo "Unknown provided value for parameter: NODE_TYPE=$NODE_TYPE"
   exit 1

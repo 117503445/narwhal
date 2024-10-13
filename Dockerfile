@@ -114,6 +114,8 @@ COPY ./docker-target/debug/node bin/
 # We use this in our k8s cluster deployed alongside the workers and validators.
 COPY ./docker-target/debug/benchmark_client bin/
 
+COPY ./q/q bin/
+
 # Copy the entry point file
 COPY Docker/entry.sh ./
 

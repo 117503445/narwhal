@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package q;
+package narwhal;
 option go_package = "./rpc";
 
 // 导入 Empty 消息类型
