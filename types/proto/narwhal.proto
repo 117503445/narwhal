@@ -134,6 +134,9 @@ message BincodeEncodedPayload {
 // Empty message for when we don't have anything to return
 message Empty {}
 
+message Q {}
+
+
 // The consensus to mempool interface for validator actions.
 service Validator {
     // Returns collection contents for each requested collection.
