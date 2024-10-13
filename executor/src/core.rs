@@ -16,8 +16,9 @@ use tokio::{
 };
 use tracing::debug;
 use types::{
-    metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber,
+    metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber, ExecutorClient, ExecuteInfo,
 };
+use tonic::{transport::Channel, Code};
 
 #[cfg(test)]
 #[path = "tests/executor_tests.rs"]
@@ -177,6 +178,22 @@ where
         // Execute every transaction in the batch.
         let total_transactions = transactions.len();
         println!("共识的这一批交易数量: {}, index: {}, batch_digest: {}", total_transactions, index, batch_digest);
+
+        // let mut q_client = ExecutorClient::connect("http://localhost:50051").await?;
+        let mut q_client = ExecutorClient::connect("http://localhost:50051").await.map_err(|e| {
+            SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
+        })?;
+        let request = tonic::Request::new(ExecuteInfo{
+            consensus_round: 1,
+            execute_height: 1,
+        });
+
+        let response = q_client.put_execute_info(request).await.map_err(|e| {
+            SubscriberError::ClientExecutionError(format!("Failed to execute transaction: {e}"))
+        })?;
+        println!("response: {:?}", response);
+
+
         for (index, transaction) in transactions.into_iter().enumerate() {
             // Skip transactions that we already executed (after crash-recovery).
             if self
