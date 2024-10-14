@@ -5,6 +5,7 @@ use crate::metrics::WorkerMetrics;
 #[cfg(feature = "benchmark")]
 use byteorder::{BigEndian, ReadBytesExt};
 use config::Committee;
+use tracing::info;
 #[cfg(feature = "benchmark")]
 use std::convert::TryInto;
 use std::sync::Arc;
@@ -131,6 +132,7 @@ impl BatchMaker {
 
         #[cfg(feature = "benchmark")]
         {
+			info!("benchmark here");
             let message = types::WorkerMessage::Batch(batch.clone());
             let serialized =
                 bincode::serialize(&message).expect("Failed to serialize our own batch");

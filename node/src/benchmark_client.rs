@@ -170,6 +170,7 @@ impl Client {
                 //     tx.put_u64(r); // Ensures all clients send different txs.
                 // };
                 info!("Sending sample transaction");
+				tx.put_u8(0u8);
                 tx.put_u8(1u8); // Standard txs start with 1.
                 tx.put_u64(r); // Ensures all clients send different txs.
 
@@ -178,7 +179,7 @@ impl Client {
                 TransactionProto { transaction: bytes }
             });
 
-    if let Err(e) = client.submit_transaction_stream(stream).await {
+    		if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
                 break 'main;
             }
