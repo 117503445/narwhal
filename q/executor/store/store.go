@@ -20,7 +20,8 @@ func NewCheckPointStore() *CheckPointStore {
 	}
 }
 
-func (s *CheckPointStore) AddSignedCheckpoint(checkPoint *rpc.SignedCheckpoint) {
+// return not nil if the quorum checkpoint is ready
+func (s *CheckPointStore) AddSignedCheckpoint(checkPoint *rpc.SignedCheckpoint) *rpc.QuorumCheckpoint {
 	s.Lock()
 	defer s.Unlock()
 	if _, ok := s.signedCheckpoints[int64(checkPoint.Checkpoint.ExecuteHeight)]; !ok {
@@ -28,20 +29,32 @@ func (s *CheckPointStore) AddSignedCheckpoint(checkPoint *rpc.SignedCheckpoint) 
 	}
 	if _, ok := s.signedCheckpoints[int64(checkPoint.Checkpoint.ExecuteHeight)][int64(checkPoint.AuthorId)]; ok {
 		log.Warn().Int64("executeHeight", int64(checkPoint.Checkpoint.ExecuteHeight)).Int64("authorId", int64(checkPoint.AuthorId)).Msg("PendingCheckPoint already exists")
-		return
+		return nil
 	}
 
 	s.signedCheckpoints[int64(checkPoint.Checkpoint.ExecuteHeight)][int64(checkPoint.AuthorId)] = checkPoint
 	log.Info().Int64("executeHeight", int64(checkPoint.Checkpoint.ExecuteHeight)).Int64("authorId", int64(checkPoint.AuthorId)).Msg("AddPendingCheckPoint")
+	if len(s.signedCheckpoints[int64(checkPoint.Checkpoint.ExecuteHeight)]) == 3 {
+		if _, ok := s.quorumCheckPoints[int64(checkPoint.Checkpoint.ExecuteHeight)]; !ok {
+			quorumCheckPoint := &rpc.QuorumCheckpoint{
+				Checkpoint: checkPoint.Checkpoint,
+			}
+			return quorumCheckPoint
+		}
+	}
+	return nil
 }
 
-func (s *CheckPointStore) AddQuorumCheckPoint(checkPoint *rpc.QuorumCheckpoint) {
+// return true if the quorum checkpoint is added successfully
+func (s *CheckPointStore) AddQuorumCheckPoint(checkPoint *rpc.QuorumCheckpoint) bool {
 	s.Lock()
 	defer s.Unlock()
 	if _, ok := s.quorumCheckPoints[int64(checkPoint.Checkpoint.ExecuteHeight)]; ok {
 		log.Warn().Int64("executeHeight", int64(checkPoint.Checkpoint.ExecuteHeight)).Msg("QuorumCheckPoint already exists")
-		return
+		return false
 	}
 
 	s.quorumCheckPoints[int64(checkPoint.Checkpoint.ExecuteHeight)] = checkPoint
+	log.Info().Int64("executeHeight", int64(checkPoint.Checkpoint.ExecuteHeight)).Int("AuthorId", int(checkPoint.Checkpoint.ExecuteHeight)).Msg("AddQuorumCheckPoint")
+	return true
 }

@@ -26,6 +26,20 @@ type Server struct {
 	checkPointStore *store.CheckPointStore
 }
 
+func (s *Server) broadcastQuorumCheckPoint(checkPoint *rpc.QuorumCheckpoint) {
+	for id, client := range s.executorGrpcClients {
+		if id == s.id {
+			continue
+		}
+		go func(client rpc.ExecutorClient, checkPoint *rpc.QuorumCheckpoint) {
+			_, err := client.PutQuorumCheckpoint(context.Background(), checkPoint)
+			if err != nil {
+				log.Error().Err(err).Msg("PutQuorumCheckpoint")
+			}
+		}(client, checkPoint)
+	}
+}
+
 func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptypb.Empty, error) {
 	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Msg("PutExecuteInfo")
 
@@ -44,7 +58,13 @@ func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptyp
 			AuthorId:  int32(s.id),
 			Signature: fmt.Sprintf("sign_by_%d", s.id),
 		}
-		s.checkPointStore.AddSignedCheckpoint(checkPoint)
+		newQuorumCheckpoint := s.checkPointStore.AddSignedCheckpoint(checkPoint)
+		if newQuorumCheckpoint != nil {
+			success := s.checkPointStore.AddQuorumCheckPoint(newQuorumCheckpoint)
+			if success {
+				go s.broadcastQuorumCheckPoint(newQuorumCheckpoint)
+			}
+		}
 
 		for id, client := range s.executorGrpcClients {
 			if id == s.id {
@@ -64,12 +84,19 @@ func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptyp
 
 func (s *Server) PutSignedCheckpoint(_ context.Context, in *rpc.SignedCheckpoint) (*emptypb.Empty, error) {
 	log.Info().Int64("executeHeight", int64(in.Checkpoint.ExecuteHeight)).Int64("authorId", int64(in.AuthorId)).Msg("PutSignedCheckpoint")
-	s.checkPointStore.AddSignedCheckpoint(in)
+	newQuorumCheckpoint := s.checkPointStore.AddSignedCheckpoint(in)
+	if newQuorumCheckpoint != nil {
+		success := s.checkPointStore.AddQuorumCheckPoint(newQuorumCheckpoint)
+		if success {
+			go s.broadcastQuorumCheckPoint(newQuorumCheckpoint)
+		}
+	}
 	return &emptypb.Empty{}, nil
 }
 
 func (s *Server) PutQuorumCheckpoint(_ context.Context, in *rpc.QuorumCheckpoint) (*emptypb.Empty, error) {
 	log.Info().Int64("executeHeight", int64(in.Checkpoint.ExecuteHeight)).Msg("PutQuorumCheckpoint")
+	s.checkPointStore.AddQuorumCheckPoint(in)
 	return &emptypb.Empty{}, nil
 }
 
