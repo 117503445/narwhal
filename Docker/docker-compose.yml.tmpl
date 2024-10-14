@@ -49,7 +49,8 @@ services:
       - primary_{{$i}}
     environment:
       - NODE_TYPE=qexecutor
-      - WORKER_ID={{ $i }}
+      - EXECUTOR_ID={{ $i }}
+      - EXECUTORS_ADDR={{ range $j := (until 4) }}http://qexecutor_{{$j}}:50051{{ if ne $j 3 }},{{ end }}{{ end }}
     volumes:
       - ./validators:/validators
       - ./validators/validator-{{$i}}/logs:/home/logs

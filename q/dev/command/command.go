@@ -91,7 +91,7 @@ type ReqCMD struct {
 }
 
 func (r *ReqCMD) Run() error {
-	
+	SendReq()
 
 	return nil
 }
@@ -102,7 +102,6 @@ type Dev0CMD struct {
 func (r *Dev0CMD) Run() error {
 	log.Debug().Msg("dev-0")
 
-	SendReq()
 
 	return nil
 }

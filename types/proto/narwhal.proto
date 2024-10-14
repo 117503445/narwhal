@@ -217,3 +217,20 @@ message ExecuteInfo {
     int32 ConsensusRound = 1;
     int32 ExecuteHeight = 2;
 }
+
+message Checkpoint {
+    int32 ConsensusRound = 1;
+    int32 ExecuteHeight = 2;
+}
+
+message SignedCheckpoint {
+    Checkpoint checkpoint = 1;
+    int32 author_id = 2;
+    string signature = 3;
+}
+
+message QuorumCheckpoint {
+    Checkpoint checkpoint = 1;
+    int32 author_id = 2;
+    repeated string signatures = 3;
+}

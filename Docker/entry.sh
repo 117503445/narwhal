@@ -66,7 +66,7 @@ elif [[ "$NODE_TYPE" = "worker" ]]; then
 elif [[ "$NODE_TYPE" = "qexecutor" ]]; then
   echo "Bootstrapping new qexecutor node with id $WORKER_ID"
 
-  LOG_PATH="/logs/validator-$VALIDATOR_ID-qexecutor-$WORKER_ID.log"
+  LOG_PATH="/logs/validator-$EXECUTOR_ID-qexecutor.log"
   echo "" > $LOG_PATH
 
   ./bin/q executor > $LOG_PATH 2>&1
