@@ -210,7 +210,9 @@ impl Primary {
 
         for (pubkey, addresses) in committee.load().others_primaries(&name) {
             let peer_id = PeerId(pubkey.0.to_bytes());
+			info!("primary_to_primary {}", &addresses.primary_to_primary);
             let address = network::multiaddr_to_address(&addresses.primary_to_primary).unwrap();
+			info!("after multiaddr_to_address, address {}", &address);
             let peer_info = PeerInfo {
                 peer_id,
                 affinity: anemo::types::PeerAffinity::High,

@@ -14,7 +14,7 @@ use tokio::{
     sync::{mpsc::Sender, watch},
     task::JoinHandle,
 };
-use tracing::debug;
+use tracing::{debug, info};
 use types::{
     metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber, ExecutorClient, ExecuteInfo,
 };
@@ -259,12 +259,15 @@ where
         // If the deserialization fail it is safe to ignore the transaction since all correct
         // clients will do the same. Remember that a bad authority or client may input random
         // bytes to the consensus.
+		info!("before deserialize, serialized = {:?}", &serialized);
         let transaction: State::Transaction = match State::deserialize(&serialized) {
             Ok(x) => x,
             Err(e) => bail!(SubscriberError::ClientExecutionError(format!(
                 "Failed to deserialize transaction: {e}"
             ))),
         };
+		info!("after deserialize");
+
 
         // Execute the transaction. Note that the executor will need to choose whether to discard
         // transactions from previous epochs by itself.

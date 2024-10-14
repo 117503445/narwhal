@@ -297,5 +297,7 @@ async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedT
     while let Some(_message) = rx_output.recv().await {
         // NOTE: Notify the user that its transaction has been processed.
         // println!("Transaction processed, length: {}", _message.0.len());
+		info!("Received message: {:?}", _message);
+        info!("Transaction processed, length: {}", _message.0.expect("Failed to process transaction").len());
     }
 }
