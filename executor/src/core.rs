@@ -19,7 +19,8 @@ use types::{
     metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber, ExecutorClient, ExecuteInfo,
 };
 use tonic::{transport::Channel, Code};
-
+// use backtrace::Backtrace;
+// use std::panic;
 #[cfg(test)]
 #[path = "tests/executor_tests.rs"]
 pub mod executor_tests;
@@ -41,6 +42,8 @@ pub struct Core<State: ExecutionState> {
     tx_output: Sender<ExecutorOutput<State>>,
     /// The indices ensuring we do not execute twice the same transaction.
     execution_indices: ExecutionIndices,
+
+    execute_height: i32,
 }
 
 impl<State: ExecutionState> Drop for Core<State> {
@@ -76,6 +79,7 @@ where
                 rx_subscriber,
                 tx_output,
                 execution_indices,
+                execute_height: 0,
             }
             .run()
             .await
@@ -175,17 +179,35 @@ where
             }
         };
 
+        self.execute_height += 1;
+
         // Execute every transaction in the batch.
         let total_transactions = transactions.len();
         println!("共识的这一批交易数量: {}, index: {}, batch_digest: {}", total_transactions, index, batch_digest);
 
-        // let mut q_client = ExecutorClient::connect("http://localhost:50051").await?;
+        // // 设置 panic 钩子，以便在 panic 时打印堆栈跟踪
+        // panic::set_hook(Box::new(|info| {
+        //     // 打印 panic 信息
+        //     if let Some(location) = info.location() {
+        //         println!("Panic occurred at: {}:{}", location.file(), location.line());
+        //     } else {
+        //         println!("Panic occurred but can't get location information...");
+        //     }
+
+        //     // 打印堆栈跟踪
+        //     let bt = Backtrace::new();
+        //     println!("{:?}", bt);
+        // }));
+
+        // // 触发 panic
+        // panic!("This is a test panic!");
+
         let mut q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
             SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
         })?;
         let request = tonic::Request::new(ExecuteInfo{
-            consensus_round: 1,
-            execute_height: 1,
+            consensus_round: consensus_output.consensus_index as i32,
+            execute_height: self.execute_height,
         });
 
         let response = q_client.put_execute_info(request).await.map_err(|e| {
