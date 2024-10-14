@@ -4758,6 +4758,7 @@ dependencies = [
  "roaring",
  "rustversion",
  "serde",
+ "serde_json",
  "serde_test",
  "serde_with",
  "signature",
