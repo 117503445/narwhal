@@ -3,6 +3,7 @@ package command
 import (
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
@@ -44,6 +45,10 @@ func UpdateTemplate() {
 	}
 }
 
+func SendReq(){
+	goutils.Exec("docker compose exec -T worker_0 ./bin/benchmark_client --nodes http://localhost:4001 --rate 20 --size 10 http://localhost:4001", goutils.WithCwd("../Docker"))
+}
+
 type BuildCmd struct {
 }
 
@@ -76,6 +81,9 @@ func (b *BuildCmd) Run() error {
 
 	// goutils.Exec("docker compose exec -T --workdir /workspace/q/assets/fc-worker fc s deploy -y", goutils.WithCwd("../"))
 
+	time.Sleep(3 * time.Second)
+	SendReq()
+
 	return nil
 }
 
@@ -83,7 +91,7 @@ type ReqCMD struct {
 }
 
 func (r *ReqCMD) Run() error {
-	goutils.Exec("docker compose exec -T worker_0 ./bin/benchmark_client --nodes http://localhost:4001 --rate 20 --size 10 http://localhost:4001", goutils.WithCwd("../Docker"))
+	
 
 	return nil
 }
@@ -93,6 +101,8 @@ type Dev0CMD struct {
 
 func (r *Dev0CMD) Run() error {
 	log.Debug().Msg("dev-0")
+
+	SendReq()
 
 	return nil
 }

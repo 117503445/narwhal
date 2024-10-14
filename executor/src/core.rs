@@ -70,7 +70,11 @@ where
     ) -> JoinHandle<()> {
         tokio::spawn(async move {
 
-            let q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
+            // 读取 QEXECUTOR_ADDR 环境变量
+
+            let addr = std::env::var("QEXECUTOR_ADDR").unwrap_or_else(|_| "http://qexecutor_0:50051".to_string());
+
+            let q_client = ExecutorClient::connect(addr).await.map_err(|e| {
                 SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
             }).expect("Failed to connect to executor");
 
