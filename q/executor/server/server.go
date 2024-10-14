@@ -12,6 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -43,14 +44,36 @@ func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptyp
 			AuthorId:  int32(s.id),
 			Signature: fmt.Sprintf("sign_by_%d", s.id),
 		}
-		s.checkPointStore.AddPendingCheckPoint(checkPoint)
+		s.checkPointStore.AddSignedCheckpoint(checkPoint)
+
+		for id, client := range s.executorGrpcClients {
+			if id == s.id {
+				continue
+			}
+			go func(client rpc.ExecutorClient, checkPoint *rpc.SignedCheckpoint) {
+				_, err := client.PutSignedCheckpoint(context.Background(), checkPoint)
+				if err != nil {
+					log.Error().Err(err).Msg("PutSignedCheckpoint")
+				}
+			}(client, checkPoint)
+		}
 	}()
 
 	return &emptypb.Empty{}, nil
 }
 
-// executersAddr: http://qexecutor_0:50051,http://qexecutor_1:50051,http://qexecutor_2:50051,http://qexecutor_3:50051
-func (s *Server) Run(port int, executorsAddr string) {
+func (s *Server) PutSignedCheckpoint(_ context.Context, in *rpc.SignedCheckpoint) (*emptypb.Empty, error) {
+	log.Info().Int64("executeHeight", int64(in.Checkpoint.ExecuteHeight)).Int64("authorId", int64(in.AuthorId)).Msg("PutSignedCheckpoint")
+	s.checkPointStore.AddSignedCheckpoint(in)
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Server) PutQuorumCheckpoint(_ context.Context, in *rpc.QuorumCheckpoint) (*emptypb.Empty, error) {
+	log.Info().Int64("executeHeight", int64(in.Checkpoint.ExecuteHeight)).Msg("PutQuorumCheckpoint")
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Server) Run() {
 
 	s.checkPointStore = store.NewCheckPointStore()
 
@@ -61,10 +84,14 @@ func (s *Server) Run(port int, executorsAddr string) {
 	}
 	s.id = id
 
+	executorsAddr := os.Getenv("EXECUTORS_ADDR")
+	log.Info().Str("executorsAddr", executorsAddr).Msg("")
+	// executersAddr: qexecutor_0:50051,qexecutor_1:50051,qexecutor_2:50051,qexecutor_3:50051
 	executorsAddrList := strings.Split(executorsAddr, ",")
 	s.executorGrpcClients = make(map[int]rpc.ExecutorClient, len(executorsAddrList))
 	for i, addr := range executorsAddrList {
-		conn, err := grpc.NewClient(addr, grpc.WithInsecure())
+		creds := insecure.NewCredentials()
+		conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to dial")
 		}

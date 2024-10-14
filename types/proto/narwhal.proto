@@ -208,6 +208,10 @@ service Executor {
 
   rpc PutExecuteInfo(ExecuteInfo) returns (google.protobuf.Empty);
 
+  rpc PutSignedCheckpoint(SignedCheckpoint) returns (google.protobuf.Empty);
+
+  rpc PutQuorumCheckpoint(QuorumCheckpoint) returns (google.protobuf.Empty);
+
 //   rpc GetBuildInfo(google.protobuf.Empty) returns (BuildInfo);
 
 //   rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
