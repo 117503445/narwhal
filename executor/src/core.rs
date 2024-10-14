@@ -44,6 +44,7 @@ pub struct Core<State: ExecutionState> {
     execution_indices: ExecutionIndices,
 
     execute_height: i32,
+    q_client: ExecutorClient<Channel>,
 }
 
 impl<State: ExecutionState> Drop for Core<State> {
@@ -68,6 +69,11 @@ where
         tx_output: Sender<ExecutorOutput<State>>,
     ) -> JoinHandle<()> {
         tokio::spawn(async move {
+
+            let q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
+                SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
+            }).expect("Failed to connect to executor");
+
             let execution_indices = execution_state
                 .load_execution_indices()
                 .await
@@ -80,6 +86,7 @@ where
                 tx_output,
                 execution_indices,
                 execute_height: 0,
+                q_client,
             }
             .run()
             .await
@@ -185,32 +192,12 @@ where
         let total_transactions = transactions.len();
         println!("共识的这一批交易数量: {}, index: {}, batch_digest: {}", total_transactions, index, batch_digest);
 
-        // // 设置 panic 钩子，以便在 panic 时打印堆栈跟踪
-        // panic::set_hook(Box::new(|info| {
-        //     // 打印 panic 信息
-        //     if let Some(location) = info.location() {
-        //         println!("Panic occurred at: {}:{}", location.file(), location.line());
-        //     } else {
-        //         println!("Panic occurred but can't get location information...");
-        //     }
-
-        //     // 打印堆栈跟踪
-        //     let bt = Backtrace::new();
-        //     println!("{:?}", bt);
-        // }));
-
-        // // 触发 panic
-        // panic!("This is a test panic!");
-
-        let mut q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
-            SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
-        })?;
         let request = tonic::Request::new(ExecuteInfo{
             consensus_round: consensus_output.consensus_index as i32,
             execute_height: self.execute_height,
         });
 
-        let response = q_client.put_execute_info(request).await.map_err(|e| {
+        let response = self.q_client.put_execute_info(request).await.map_err(|e| {
             SubscriberError::ClientExecutionError(format!("Failed to execute transaction: {e}"))
         })?;
         println!("response: {:?}", response);
