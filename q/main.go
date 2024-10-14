@@ -25,7 +25,7 @@ var cli struct {
 func main() {
 	goutils.InitZeroLog()
 
-	// goutils.ExecOpt.DumpOutput = true
+	goutils.ExecOpt.DumpOutput = true
 
 	ctx := kong.Parse(&cli)
 
