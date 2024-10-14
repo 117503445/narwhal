@@ -419,6 +419,7 @@ impl Transactions for TxReceiverHandler {
     ) -> Result<tonic::Response<types::Empty>, tonic::Status> {
 
         info!("qht TxReceiverHandler.submit_transaction_stream");
+        info!("ywb");
 
         let mut transactions = request.into_inner();
 

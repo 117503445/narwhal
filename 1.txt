@@ -1,0 +1,6 @@
+export http_proxy=http://10.192.241.146:10809
+export HTTPS_PROXY=http://10.192.241.146:10809
+
+    environment:
+        - http_proxy=http://10.192.241.146:10809
+        - https_proxy=http://10.192.241.146:10809

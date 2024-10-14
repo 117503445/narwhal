@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use consensus::ConsensusOutput;
 use executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use thiserror::Error;
+use tracing::info;
 
 /// A simple/dumb execution engine.
 pub struct SimpleExecutionState;
@@ -24,8 +25,9 @@ impl ExecutionState for SimpleExecutionState {
     }
 
     fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
+		info!("Deserializing bytes: {:?}", bytes);
         bincode::deserialize(bytes)
-    }
+    }我听得到你
 
     fn ask_consensus_write_lock(&self) -> bool {
         true

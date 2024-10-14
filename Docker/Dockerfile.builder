@@ -1,4 +1,4 @@
-FROM rust:1.62-bullseye AS builder
+FROM registry.cn-hangzhou.aliyuncs.com/117503445-mirror/sync:linux.amd64.docker.io.library.rust.1.62-bullseye AS builder
 ARG PROFILE=release
 ARG GIT_REVISION
 ENV GIT_REVISION=$GIT_REVISION
@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y cmake clang
 
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
 ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
+
+ENV http_proxy http://10.192.241.146:10809
+ENV HTTPS_PROXY http://10.192.241.146:10809
 
 COPY ./Docker/config.toml /root/.cargo/config
 

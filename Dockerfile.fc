@@ -1,4 +1,4 @@
-FROM node:20-bookworm
+FROM registry.cn-hangzhou.aliyuncs.com/117503445-mirror/sync:linux.amd64.docker.io.library.node.20-bookworm
 
 RUN npm config set registry https://registry.npmmirror.com && npm install @serverless-devs/s -g
 
