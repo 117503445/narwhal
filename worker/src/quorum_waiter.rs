@@ -11,6 +11,7 @@ use types::{
     metered_channel::{Receiver, Sender},
     Batch, ReconfigureNotification, SerializedBatchMessage, WorkerMessage,
 };
+use tracing::info;
 
 #[cfg(test)]
 #[path = "tests/quorum_waiter_tests.rs"]
@@ -85,6 +86,7 @@ impl QuorumWaiter {
                         .map(|(name, addresses)| (name, addresses.worker_to_worker))
                         .collect();
                     let (names, addresses): (Vec<_>, _) = workers_addresses.iter().cloned().unzip();
+					info!("ywb before serialized batch");
                     let message = WorkerMessage::Batch(batch);
                     let serialized =
                         bincode::serialize(&message).expect("Failed to serialize our own batch");

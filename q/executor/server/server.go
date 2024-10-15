@@ -15,7 +15,7 @@ type Server struct {
 }
 
 func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptypb.Empty, error) {
-	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Msg("PutExecuteInfo")
+	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Uint64("id", in.Id).Msg("PutExecuteInfo")
 	return &emptypb.Empty{}, nil
 }
 

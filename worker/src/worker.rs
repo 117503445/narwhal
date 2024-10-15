@@ -424,6 +424,7 @@ impl Transactions for TxReceiverHandler {
 
         while let Some(Ok(txn)) = transactions.next().await {
             // Send the transaction to the batch maker.
+			info!("ywb txn: {:?}", txn);
             self.tx_batch_maker
                 .send(txn.transaction.to_vec())
                 .await

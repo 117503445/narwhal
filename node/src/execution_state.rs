@@ -4,13 +4,14 @@ use async_trait::async_trait;
 use consensus::ConsensusOutput;
 use executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use thiserror::Error;
+use tracing::info;
 
 /// A simple/dumb execution engine.
 pub struct SimpleExecutionState;
 
 #[async_trait]
 impl ExecutionState for SimpleExecutionState {
-    type Transaction = String;
+    type Transaction = Vec<u8>;
     type Error = SimpleExecutionError;
     type Outcome = Vec<u8>;
 
@@ -24,7 +25,22 @@ impl ExecutionState for SimpleExecutionState {
     }
 
     fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
-        bincode::deserialize(bytes)
+		info!("ywb enter desrialize");
+		info!("Bytes to deserialize: {:?}", bytes);
+
+        // // 检查字节数组是否是有效的 UTF-8 编码
+        // match std::str::from_utf8(bytes) {
+        //     Ok(valid_str) => {
+        //         info!("Valid UTF-8 string: {}", valid_str);
+        //         bincode::deserialize(bytes)
+        //     },
+        //     Err(e) => {
+        //         info!("Invalid UTF-8 sequence: {:?}", e);
+        //         Err(bincode::Error::new(bincode::ErrorKind::Custom("Invalid UTF-8 sequence".into())))
+        //     }
+        // }
+		Ok(bytes.to_vec())
+        // bincode::deserialize(bytes)
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

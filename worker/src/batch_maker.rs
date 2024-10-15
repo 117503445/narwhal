@@ -5,6 +5,7 @@ use crate::metrics::WorkerMetrics;
 #[cfg(feature = "benchmark")]
 use byteorder::{BigEndian, ReadBytesExt};
 use config::Committee;
+use tracing::info;
 #[cfg(feature = "benchmark")]
 use std::convert::TryInto;
 use std::sync::Arc;
@@ -82,6 +83,7 @@ impl BatchMaker {
             tokio::select! {
                 // Assemble client transactions into batches of preset size.
                 Some(transaction) = self.rx_transaction.recv() => {
+					info!("ywb Received transaction, len: {}", transaction.len());
                     self.current_batch_size += transaction.len();
                     self.current_batch.0.push(transaction);
                     if self.current_batch_size >= self.batch_size {
@@ -188,6 +190,7 @@ impl BatchMaker {
             .observe(size as f64);
 
         // Send the batch through the deliver channel for further processing.
+		info!("ywb will enter tx_message.send");
         if self.tx_message.send(batch).await.is_err() {
             tracing::debug!("{}", DagError::ShuttingDown);
         }

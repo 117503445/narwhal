@@ -1,7 +1,7 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 mod core;
-mod errors;
+pub mod errors;
 mod state;
 mod subscriber;
 
@@ -46,7 +46,8 @@ pub type SerializedTransactionDigest = u64;
 #[async_trait]
 pub trait ExecutionState {
     /// The type of the transaction to process.
-    type Transaction: DeserializeOwned + Send + Debug;
+    // type Transaction: DeserializeOwned + Send + Debug;
+	type Transaction: Send + Debug;
 
     /// The error type to return in case something went wrong during execution.
     type Error: ExecutionStateError;

@@ -22,6 +22,7 @@ service Executor {
 message ExecuteInfo {
     int32 ConsensusRound = 1;
     int32 ExecuteHeight = 2;
+	uint64 id = 3;
 }
 
 // Size of a Hat, in inches.

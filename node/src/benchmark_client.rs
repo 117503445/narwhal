@@ -14,6 +14,9 @@ use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use types::{TransactionProto, TransactionsClient};
 use url::Url;
+use types::ExecuteInfo;
+use prost::Message;
+
 
 #[tokio::main]
 async fn main() -> Result<(), eyre::Report> {
@@ -141,7 +144,7 @@ impl Client {
 
         // Submit all transactions.
         // let mut counter = 0;
-        let mut r = rand::thread_rng().gen();
+        let mut r: u64 = rand::thread_rng().gen();
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
@@ -170,11 +173,23 @@ impl Client {
                 //     tx.put_u64(r); // Ensures all clients send different txs.
                 // };
                 info!("Sending sample transaction");
-                tx.put_u8(1u8); // Standard txs start with 1.
-                tx.put_u64(r); // Ensures all clients send different txs.
+				// 构造 ExecuteInfo 对象
+				let execute_info = ExecuteInfo {
+					consensus_round: 12,
+					execute_height: 6,
+					id: 18,            
+				};
+				let mut buf = Vec::new();
+				execute_info.encode(&mut buf).unwrap();
+				info!("ywb buf: {:?}", buf);
 
-                tx.resize(size, 0u8);
+                // tx.put_u8(0u8); // Standard txs start with 1.
+                // tx.put_u64(r); // Ensures all clients send different txs.
+				tx.put_slice(&buf);
+				
+                // tx.resize(size, 0u8);
                 let bytes = tx.split().freeze();
+				// info!("bytes: {:?}", bytes);
                 TransactionProto { transaction: bytes }
             });
 

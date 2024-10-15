@@ -26,6 +26,11 @@ use std::sync::Arc;
 use telemetry_subscribers::TelemetryGuards;
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
+use types::{ ExecutorClient, ExecuteInfo};
+use executor::errors::SubscriberError;
+use tonic::Request;
+use prost::Message;
+
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;
 #[cfg(feature = "benchmark")]
@@ -297,5 +302,35 @@ async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedT
     while let Some(_message) = rx_output.recv().await {
         // NOTE: Notify the user that its transaction has been processed.
         // println!("Transaction processed, length: {}", _message.0.len());
+		info!("analyze message: {:?}", _message);
+		info!("ywb analyze {:?}", _message.0);
+		// 反序列化 _message.1 为 ExecuteInfo
+        let execute_info = match ExecuteInfo::decode(&_message.1[..]) {
+            Ok(info) => info,
+            Err(e) => {
+                println!("Failed to decode ExecuteInfo: {:?}", e);
+				return;
+            }
+        };
+		info!("ywb 反序列化 execute_info: {:?}", execute_info);
+		match ExecutorClient::connect("http://qexecutor_0:50051").await {
+            Ok(mut q_client) => {
+                let request = Request::new(execute_info);
+
+                match q_client.put_execute_info(request).await {
+                    Ok(response) => {
+                        println!("response: {:?}", response);
+                    }
+                    Err(e) => {
+                        let error = SubscriberError::ClientExecutionError(format!("Failed to execute transaction: {e}"));
+                        println!("Error: {:?}", error);
+                    }
+                }
+            }
+            Err(e) => {
+                let error = SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"));
+                println!("Error: {:?}", error);
+            }
+        }
     }
 }

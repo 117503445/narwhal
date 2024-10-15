@@ -14,7 +14,7 @@ use tokio::{
     sync::{mpsc::Sender, watch},
     task::JoinHandle,
 };
-use tracing::debug;
+use tracing::{debug, info};
 use types::{
     metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber, ExecutorClient, ExecuteInfo,
 };
@@ -202,18 +202,19 @@ where
         // // 触发 panic
         // panic!("This is a test panic!");
 
-        let mut q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
-            SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
-        })?;
-        let request = tonic::Request::new(ExecuteInfo{
-            consensus_round: consensus_output.consensus_index as i32,
-            execute_height: self.execute_height,
-        });
+        // let mut q_client = ExecutorClient::connect("http://qexecutor_0:50051").await.map_err(|e| {
+        //     SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
+        // })?;
+        // let request = tonic::Request::new(ExecuteInfo{
+        //     consensus_round: consensus_output.consensus_index as i32,
+        //     execute_height: self.execute_height,
+		// 	id: 18,
+        // });
 
-        let response = q_client.put_execute_info(request).await.map_err(|e| {
-            SubscriberError::ClientExecutionError(format!("Failed to execute transaction: {e}"))
-        })?;
-        println!("response: {:?}", response);
+        // let response = q_client.put_execute_info(request).await.map_err(|e| {
+        //     SubscriberError::ClientExecutionError(format!("Failed to execute transaction: {e}"))
+        // })?;
+        // println!("response: {:?}", response);
 
 
         for (index, transaction) in transactions.into_iter().enumerate() {
@@ -277,6 +278,8 @@ where
         self.execution_indices
             .next(total_batches, total_transactions);
 
+		info!("ywb serialized transaction: {:?}", &serialized);
+
         // The consensus simply orders bytes, so we first need to deserialize the transaction.
         // If the deserialization fail it is safe to ignore the transaction since all correct
         // clients will do the same. Remember that a bad authority or client may input random
@@ -287,6 +290,7 @@ where
                 "Failed to deserialize transaction: {e}"
             ))),
         };
+		info!("ywb deserialize transaction: {:?}", &transaction);
 
         // Execute the transaction. Note that the executor will need to choose whether to discard
         // transactions from previous epochs by itself.
