@@ -5,6 +5,7 @@ import (
 	"github.com/alecthomas/kong"
 	dev "q/dev/command"
 	executor "q/executor/command"
+	worker "q/worker/command"
 )
 
 type DefaultCmd struct {
@@ -20,6 +21,7 @@ var cli struct {
 	Req        dev.ReqCMD           `cmd:""`
 	Dev0       dev.Dev0CMD          `cmd:""`
 	Executor   executor.ExecutorCmd `cmd:""`
+	Worker      worker.WorkerCmd   `cmd:""`
 }
 
 func main() {
