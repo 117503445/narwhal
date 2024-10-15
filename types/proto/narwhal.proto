@@ -176,7 +176,7 @@ service WorkerToWorker {
     rpc ClientBatchRequest(BincodeEncodedPayload) returns (stream BincodeEncodedPayload) {}
 }
 
-// The worker-to-primary interface
+// The worker-to-primary interface, running on the primary
 service WorkerToPrimary {
     // Sends a message
     rpc SendMessage(BincodeEncodedPayload) returns (Empty) {}
@@ -184,7 +184,7 @@ service WorkerToPrimary {
     rpc WorkerInfo(Empty) returns (BincodeEncodedPayload) {}
 }
 
-// The primary-to-worker interface
+// The primary-to-worker interface, running on the worker
 service PrimaryToWorker {
     // Sends a message
     rpc SendMessage(BincodeEncodedPayload) returns (Empty) {}
