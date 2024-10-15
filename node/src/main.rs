@@ -23,6 +23,7 @@ use node::{
 };
 use prometheus::Registry;
 use std::sync::Arc;
+use std::env;
 use telemetry_subscribers::TelemetryGuards;
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
@@ -211,6 +212,8 @@ async fn run(
     worker_keypair: Ed25519KeyPair,
     registry: Registry,
 ) -> Result<(), eyre::Report> {
+	let name = primary_keypair.public().clone();
+
     let committee_file = matches.value_of("committee").unwrap();
     let workers_file = matches.value_of("workers").unwrap();
     let parameters_file = matches.value_of("parameters");
@@ -220,6 +223,7 @@ async fn run(
     let committee = Arc::new(ArcSwap::from_pointee(
         Committee::import(committee_file).context("Failed to load the committee information")?,
     ));
+	info!("ywb committee: {:?}", committee);
     let worker_cache = Arc::new(ArcSwap::from_pointee(
         WorkerCache::import(workers_file).context("Failed to load the worker information")?,
     ));
@@ -238,6 +242,8 @@ async fn run(
     // The channel returning the result for each transaction's execution.
     let (tx_transaction_confirmation, rx_transaction_confirmation) =
         channel(Node::CHANNEL_CAPACITY);
+
+	let executor_address = Node::get_primary_to_executor_address(&committee, &name);
 
     // Check whether to run a primary, a worker, or an entire authority.
     let node_handles = match matches.subcommand() {
@@ -288,7 +294,7 @@ async fn run(
     let _metrics_server_handle = start_prometheus_server(prom_address, &registry);
 
     // Analyze the consensus' output.
-    analyze(rx_transaction_confirmation).await;
+    analyze(rx_transaction_confirmation, &executor_address).await;
 
     // Await on the completion handles of all the nodes we have launched
     join_all(node_handles).await;
@@ -298,12 +304,12 @@ async fn run(
 }
 
 /// Receives an ordered list of certificates and apply any application-specific logic.
-async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedTransaction)>) {
+async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedTransaction)>, address: &str) {
     while let Some(_message) = rx_output.recv().await {
         // NOTE: Notify the user that its transaction has been processed.
         // println!("Transaction processed, length: {}", _message.0.len());
-		info!("analyze message: {:?}", _message);
-		info!("ywb analyze {:?}", _message.0);
+		info!("ywb analyze message: {:?}", &_message);
+		info!("ywb address {:?}", address);
 		// 反序列化 _message.1 为 ExecuteInfo
         let execute_info = match ExecuteInfo::decode(&_message.1[..]) {
             Ok(info) => info,
@@ -312,8 +318,9 @@ async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedT
 				return;
             }
         };
+
 		info!("ywb 反序列化 execute_info: {:?}", execute_info);
-		match ExecutorClient::connect("http://qexecutor_0:50051").await {
+		match ExecutorClient::connect(address.to_string()).await {
             Ok(mut q_client) => {
                 let request = Request::new(execute_info);
 

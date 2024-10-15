@@ -394,4 +394,17 @@ impl Node {
         }
         handles
     }
+	    /// 获取 primary_to_executor 地址
+    pub fn get_primary_to_executor_address(
+        committee: &SharedCommittee,
+        name: &PublicKey,
+    ) -> String {
+        let address = committee
+            .load()
+            .primary(name)
+            .expect("Our public key or worker id is not in the committee")
+            .primary_to_executor;
+
+        address
+    }
 }

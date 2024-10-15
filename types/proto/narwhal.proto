@@ -28,6 +28,7 @@ message CollectionError {
 message PrimaryAddresses {
     MultiAddr primary_to_primary = 1;
     MultiAddr worker_to_primary = 2;
+	string primary_to_executor = 3;
 }
 
 message MultiAddr {

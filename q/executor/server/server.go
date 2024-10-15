@@ -19,8 +19,9 @@ func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptyp
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) Run(port int) {
-	lis, err := net.Listen("tcp", ":50051")
+func (s *Server) Run(port string) {
+	port = ":" + port
+    lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to listen")
 	}

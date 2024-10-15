@@ -442,6 +442,8 @@ pub struct PrimaryAddresses {
     pub primary_to_primary: Multiaddr,
     /// Address to receive messages from our workers (LAN).
     pub worker_to_primary: Multiaddr,
+	/// Address to post transaction to executor
+	pub primary_to_executor: String
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

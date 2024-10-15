@@ -82,9 +82,11 @@ impl Configuration for NarwhalConfiguration {
                 .map_err(|err| {
                     Status::invalid_argument(format!("Could not serialize: {:?}", err))
                 })?;
+			let primary_to_executor = String::new();
             let primary = PrimaryAddresses {
                 primary_to_primary,
                 worker_to_primary,
+				primary_to_executor
             };
             parsed_input.push(format!(
                 "public_key: {:?} stake_weight: {:?} primary addresses: {:?}",
@@ -140,9 +142,11 @@ impl Configuration for NarwhalConfiguration {
                 .map_err(|err| {
                     Status::invalid_argument(format!("Could not serialize: {:?}", err))
                 })?;
+			let primary_to_executor = String::new();
             let primary = PrimaryAddresses {
                 primary_to_primary,
                 worker_to_primary,
+				primary_to_executor
             };
             new_network_info.insert(public_key, (stake_weight, primary));
         }

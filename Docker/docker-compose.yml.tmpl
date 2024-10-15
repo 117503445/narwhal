@@ -7,6 +7,7 @@ services:
     environment:
       - NODE_TYPE=primary
       - VALIDATOR_ID={{ $i }}
+      - EXECUTOR_PORT=5005{{ $i }}
       - LOG_LEVEL=-vvv
       - CONSENSUS_DISABLED=--consensus-disabled
     expose:
@@ -49,6 +50,7 @@ services:
     environment:
       - NODE_TYPE=qexecutor
       - WORKER_ID={{ $i }}
+      - GRPC_PORT=5005{{ $i }}
     volumes:
       - ./validators:/validators
       - ./validators/validator-{{$i}}/logs:/home/logs
