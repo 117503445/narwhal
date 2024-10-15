@@ -5,6 +5,7 @@ import (
 	"github.com/alecthomas/kong"
 	dev "q/dev/command"
 	executor "q/executor/command"
+	sendreq "q/sendreq/command"
 	worker "q/worker/command"
 )
 
@@ -21,7 +22,8 @@ var cli struct {
 	Req        dev.ReqCMD           `cmd:""`
 	Dev0       dev.Dev0CMD          `cmd:""`
 	Executor   executor.ExecutorCmd `cmd:""`
-	Worker      worker.WorkerCmd   `cmd:""`
+	Worker     worker.WorkerCmd     `cmd:""`
+	SendReq    sendreq.SendReqCmd   `cmd:""`
 }
 
 func main() {

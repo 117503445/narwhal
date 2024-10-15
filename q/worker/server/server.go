@@ -1,7 +1,7 @@
 package server
 
 import (
-	// "context"
+	"context"
 	// "fmt"
 	"net"
 	"os"
@@ -17,13 +17,19 @@ import (
 )
 
 type Server struct {
-	rpc.UnimplementedExecutorServer
+	rpc.UnimplementedPrimaryToWorkerServer
 
 	id int // id of this worker
 
 	// executorGrpcClients map[int]rpc.ExecutorClient // id -> client
 
 	// checkPointStore *store.CheckPointStore
+}
+
+func (s *Server) SendMessage(_ context.Context, in *rpc.BincodeEncodedPayload) (*rpc.Empty, error) {
+	log.Info().Msg("UnimplementedPrimaryToWorkerServer.SendMessage")
+
+	return &rpc.Empty{}, nil
 }
 
 func (s *Server) Run() {
@@ -57,7 +63,7 @@ func (s *Server) Run() {
 	}
 
 	grpcS := grpc.NewServer()
-	rpc.RegisterExecutorServer(grpcS, s)
+	rpc.RegisterPrimaryToWorkerServer(grpcS, s)
 
 	if err := grpcS.Serve(lis); err != nil {
 		log.Fatal().Err(err).Msg("failed to serve")
