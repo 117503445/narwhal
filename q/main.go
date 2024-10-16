@@ -5,6 +5,7 @@ import (
 	"github.com/alecthomas/kong"
 	dev "q/dev/command"
 	executor "q/executor/command"
+	indexer "q/indexer/command"
 )
 
 type DefaultCmd struct {
@@ -20,6 +21,7 @@ var cli struct {
 	Req        dev.ReqCMD           `cmd:""`
 	Dev0       dev.Dev0CMD          `cmd:""`
 	Executor   executor.ExecutorCmd `cmd:""`
+	Indexer	   indexer.IndexerCmd   `cmd:""` 
 }
 
 func main() {

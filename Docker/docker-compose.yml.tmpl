@@ -57,4 +57,19 @@ services:
       - ./logs:/logs
       - ./data/qexecutor-{{$i}}:/data
     init: true
+
+  indexer_{{$i}}:
+    image: 117503445/narwhal
+    depends_on:
+      - primary_{{$i}}
+    environment:
+      - NODE_TYPE=indexer
+      - WORKER_ID={{ $i }}
+      - GRPC_PORT=3005{{ $i }}
+    volumes:
+      - ./validators:/validators
+      - ./validators/validator-{{$i}}/logs:/home/logs
+      - ./logs:/logs
+      - ./data/indexer-{{$i}}:/data
+    init: true
 {{- end }}

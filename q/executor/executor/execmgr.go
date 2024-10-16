@@ -90,6 +90,7 @@ func (e *ExecMgr) handleExecute(transaction *rpc.MyTransaction) {
     default:
         log.Warn().Msgf("Unknown transaction type: %s", transaction.TxType)
     }
+	// todo 执行结果外传到索引节点 可以用gookit/ini来读取索引节点配置
 }
 
 
