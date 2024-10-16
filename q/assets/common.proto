@@ -14,6 +14,8 @@ service Executor {
 
   rpc PutExecuteInfo(ExecuteInfo) returns (google.protobuf.Empty);
 
+  rpc SendTransaction(MyTransaction) returns (google.protobuf.Empty);
+
 //   rpc GetBuildInfo(google.protobuf.Empty) returns (BuildInfo);
 
 //   rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
@@ -23,6 +25,20 @@ message ExecuteInfo {
     int32 ConsensusRound = 1;
     int32 ExecuteHeight = 2;
 	uint64 id = 3;
+}
+
+message MyTransaction {
+	string id = 1;
+	bytes transactionHash = 2;
+	bytes value = 3;
+	// 0 注册， 1 更新， 2 删除
+	enum TxType {
+		REGISTTX = 0;
+		UPDATETX = 1;
+		DELETETX = 2;
+	}
+	TxType txType = 4;
+	int64 timestamp = 5;
 }
 
 // Size of a Hat, in inches.

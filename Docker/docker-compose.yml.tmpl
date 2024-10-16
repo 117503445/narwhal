@@ -55,5 +55,6 @@ services:
       - ./validators:/validators
       - ./validators/validator-{{$i}}/logs:/home/logs
       - ./logs:/logs
+      - ./data/qexecutor-{{$i}}:/data
     init: true
 {{- end }}

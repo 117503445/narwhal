@@ -12,14 +12,20 @@ import (
 
 type Server struct {
 	rpc.UnimplementedExecutorServer
-	recvChan chan *rpc.ExecuteInfo
+	recvChan chan *rpc.MyTransaction
 }
 
 func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptypb.Empty, error) {
 	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Uint64("id", in.Id).Msg("PutExecuteInfo")
+	// s.recvChan <- in
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Server) SendTransaction(_ context.Context, in *rpc.MyTransaction) (*emptypb.Empty, error) {
 	s.recvChan <- in
 	return &emptypb.Empty{}, nil
 }
+
 
 func (s *Server) Run(port string) {
 	port = ":" + port
@@ -36,7 +42,7 @@ func (s *Server) Run(port string) {
 	}
 }
 
-func NewServer(recvChan chan *rpc.ExecuteInfo) *Server {
+func NewServer(recvChan chan *rpc.MyTransaction) *Server {
 	return &Server{
 		recvChan: recvChan,
 	}

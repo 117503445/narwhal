@@ -28,7 +28,7 @@ func (e *ExecutorCmd) Run() error {
 	log.Info().Msg("Executor Run")
 	
 	port := e.getGrpcPort()
-	txCh := make(chan *rpc.ExecuteInfo, 1024)
+	txCh := make(chan *rpc.MyTransaction, 1024)
 	server := server.NewServer(txCh)
 	execMgr := execmgr.NewExecMgr(txCh)
 
@@ -38,7 +38,6 @@ func (e *ExecutorCmd) Run() error {
 	// 使用 select 语句阻塞主线程，直到接收到终止信号
     sigChan := make(chan os.Signal, 1)
     signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
 	// 阻塞主线程
     sig := <-sigChan
     log.Info().Msgf("Received signal: %s. Shutting down...", sig)

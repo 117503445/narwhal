@@ -27,7 +27,7 @@ use std::env;
 use telemetry_subscribers::TelemetryGuards;
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
-use types::{ ExecutorClient, ExecuteInfo};
+use types::{ ExecutorClient, MyTransaction};
 use executor::errors::SubscriberError;
 use tonic::Request;
 use prost::Message;
@@ -311,7 +311,7 @@ async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedT
 		info!("ywb analyze message: {:?}", &_message);
 		info!("ywb address {:?}", address);
 		// 反序列化 _message.1 为 ExecuteInfo
-        let execute_info = match ExecuteInfo::decode(&_message.1[..]) {
+        let transaction = match MyTransaction::decode(&_message.1[..]) {
             Ok(info) => info,
             Err(e) => {
                 println!("Failed to decode ExecuteInfo: {:?}", e);
@@ -319,12 +319,12 @@ async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedT
             }
         };
 
-		info!("ywb 反序列化 execute_info: {:?}", execute_info);
+		info!("ywb 反序列化 transaction: {:?}", transaction);
 		match ExecutorClient::connect(address.to_string()).await {
             Ok(mut q_client) => {
-                let request = Request::new(execute_info);
+                let request = Request::new(transaction);
 
-                match q_client.put_execute_info(request).await {
+                match q_client.send_transaction(request).await {
                     Ok(response) => {
                         println!("response: {:?}", response);
                     }

@@ -1,7 +1,9 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use bytes::{BufMut as _, BytesMut};
+use bytes::{BufMut as _, Bytes, BytesMut};
 use clap::{crate_name, crate_version, App, AppSettings};
 use eyre::Context;
 use futures::{future::join_all, StreamExt};
@@ -12,10 +14,10 @@ use tokio::{
 };
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
-use types::{TransactionProto, TransactionsClient};
+use types::{MyTransaction, TransactionProto, TransactionsClient, TxType};
 use url::Url;
-use types::ExecuteInfo;
 use prost::Message;
+use sha2::{Sha256, Digest};
 
 
 #[tokio::main]
@@ -173,14 +175,8 @@ impl Client {
                 //     tx.put_u64(r); // Ensures all clients send different txs.
                 // };
                 info!("Sending sample transaction");
-				// 构造 ExecuteInfo 对象
-				let execute_info = ExecuteInfo {
-					consensus_round: 12,
-					execute_height: 6,
-					id: 18,            
-				};
-				let mut buf = Vec::new();
-				execute_info.encode(&mut buf).unwrap();
+				// 构造 MyTransaction 对象
+				let buf = create_hashed_transaction("0/abc/test", "some value", TxType::Registtx as i32);
 				info!("ywb buf: {:?}", buf);
 
                 // tx.put_u8(0u8); // Standard txs start with 1.
@@ -193,7 +189,7 @@ impl Client {
                 TransactionProto { transaction: bytes }
             });
 
-    if let Err(e) = client.submit_transaction_stream(stream).await {
+    		if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
                 break 'main;
             }
@@ -224,4 +220,44 @@ impl Client {
         }))
         .await;
     }
+
+    
+}
+
+fn create_hashed_transaction(id: &str, value: &str, tx_type: i32) -> Vec<u8> {
+	// 获取当前时间戳
+	let start = SystemTime::now();
+	let timestamp = start.duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+
+	// 构造 MyTransaction 对象
+	let mut transaction = MyTransaction {
+		id: id.to_string(),
+		transaction_hash: Bytes::new(), // 先初始化为空，稍后计算
+        value: Bytes::from(value.to_string()),
+		tx_type,
+		timestamp,
+	};
+
+	// 序列化 transaction
+	let mut temp_buf = BytesMut::with_capacity(transaction.encoded_len());
+	transaction.encode(&mut temp_buf).unwrap();
+
+	// 计算哈希值
+	let mut hasher = Sha256::new();
+	hasher.update(&temp_buf);
+	let hash_result = hasher.finalize();
+
+	// 更新 transaction_hash 字段
+	transaction.transaction_hash = Bytes::from(hash_result.to_vec());
+	info!("ywb transaction: {:?}", transaction);
+
+	// 再次序列化 transaction
+	let mut final_buf = BytesMut::with_capacity(transaction.encoded_len());
+	transaction.encode(&mut final_buf).unwrap();
+
+	// 打印结果
+	let mut serialized_transaction = Vec::new();
+	transaction.encode(&mut serialized_transaction).unwrap();
+
+	serialized_transaction
 }

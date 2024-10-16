@@ -2477,6 +2477,7 @@ dependencies = [
  "rand 0.8.5",
  "serde-reflection",
  "serde_yaml",
+ "sha2 0.9.9",
  "storage",
  "structopt",
  "telemetry-subscribers",
