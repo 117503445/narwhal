@@ -18,19 +18,10 @@ type ExecMgr struct {
 }
 
 func NewExecMgr(recvCh chan *rpc.MyTransaction) *ExecMgr {
-
-	// 从环境变量中获取账本文件路径
-	nodeType := os.Getenv("NODE_TYPE")
-	workerID := os.Getenv("WORKER_ID")
-	if nodeType == "" || workerID == "" {
-		log.Fatal().Msg("NODE_TYPE 或 WORKER_ID 环境变量未设置")
-	}
-	filePath := fmt.Sprintf("/data/%s-%s/ledger.json", nodeType, workerID)
-
     return &ExecMgr{
 		recvCh: recvCh,
         stopChan: make(chan struct{}),
-		contract: *contract.NewSmartContract(filePath),
+		contract: *contract.NewSmartContract("/data"),
     }
 }
 
@@ -40,6 +31,7 @@ func (e *ExecMgr) Start() {
 
 func (e *ExecMgr) Stop() {
     close(e.stopChan)
+	e.contract.Stop()
 }
 
 func (e *ExecMgr) process() {
@@ -48,7 +40,8 @@ func (e *ExecMgr) process() {
         case transaction := <-e.recvCh:
             log.Info().Msgf("Processing transaction: %v", transaction)
             // 在这里处理接收到的消息
-			e.saveToFile(transaction, "/data") // test
+			// e.saveToFile(transaction, "/data") // test
+			e.handleExecute(transaction)
         case <-e.stopChan:
             log.Info().Msg("Stopping process goroutine")
             return
@@ -82,4 +75,22 @@ func (e *ExecMgr) saveToFile(transaction *rpc.MyTransaction, dir string) {
 
     log.Info().Str("file", filepath).Msg("transaction saved")
 }
+
+func (e *ExecMgr) handleExecute(transaction *rpc.MyTransaction) {
+	// 日志打印transaction.TxType
+	log.Info().Msgf("transaction.TxType: %v", transaction.TxType)
+    switch transaction.TxType {
+    case rpc.MyTransaction_REGISTTX:
+        e.contract.CreateAsset(transaction.Id, transaction.Value)
+    case rpc.MyTransaction_UPDATETX:
+        e.contract.UpdateAsset(transaction.Id, transaction.Value)
+	case rpc.MyTransaction_DELETETX:
+		e.contract.DeleteAsset(transaction.Id)
+    // 添加更多的交易类型和对应的处理方法
+    default:
+        log.Warn().Msgf("Unknown transaction type: %s", transaction.TxType)
+    }
+}
+
+
 
