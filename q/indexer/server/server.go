@@ -1,31 +1,44 @@
 package server
 
 import (
-	"context"
+	"io"
 	"net"
 	"q/rpc"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Server struct {
-	rpc.UnimplementedExecutorServer
-	recvChan chan *rpc.MyTransaction
+	rpc.UnimplementedIndexerServer
+	recvChan chan *rpc.IndexerReq
 }
 
-func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptypb.Empty, error) {
-	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Uint64("id", in.Id).Msg("PutExecuteInfo")
-	// s.recvChan <- in
-	return &emptypb.Empty{}, nil
-}
+func (s *Server) SendIndexReq(stream rpc.Indexer_SendIndexReqServer) error {
+	for {
+        req, err := stream.Recv()
+        if err == io.EOF {
+            return nil
+        }
+        if err != nil {
+            log.Error().Err(err).Msg("failed to receive request")
+            return err
+        }
 
-func (s *Server) SendTransaction(_ context.Context, in *rpc.MyTransaction) (*emptypb.Empty, error) {
-	s.recvChan <- in
-	return &emptypb.Empty{}, nil
-}
+        s.recvChan <- req
 
+		// todo
+        resp := &rpc.IndexerResp{
+            Id:   req.Id,
+            Addr: "some-address", // 这里可以根据实际情况设置
+        }
+
+        if err := stream.Send(resp); err != nil {
+            log.Error().Err(err).Msg("failed to send response")
+            return err
+        }
+    }
+}
 
 func (s *Server) Run(port string) {
 	port = ":" + port
@@ -35,14 +48,16 @@ func (s *Server) Run(port string) {
 	}
 
 	grpcS := grpc.NewServer()
-	rpc.RegisterExecutorServer(grpcS, s)
+	rpc.RegisterIndexerServer(grpcS, s)
+
+	log.Info().Msg("Server is running...")
 
 	if err := grpcS.Serve(lis); err != nil {
 		log.Fatal().Err(err).Msg("failed to serve")
 	}
 }
 
-func NewServer(recvChan chan *rpc.MyTransaction) *Server {
+func NewServer(recvChan chan *rpc.IndexerReq) *Server {
 	return &Server{
 		recvChan: recvChan,
 	}

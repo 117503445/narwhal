@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package narwhal;
+option go_package = "./rpc";
+
+service Indexer {
+	rpc SendIndexReq(stream IndexerReq) returns (stream IndexerResp) {}
+}
+
+message IndexerReq {
+	string id = 1;
+}	
+
+message IndexerResp {
+	string id = 1;
+	string addr = 2;
+}	
