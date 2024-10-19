@@ -116,8 +116,6 @@ COPY ./docker-target/debug/benchmark_client bin/
 
 COPY ./q/q bin/
 
-COPY ./q/client bin/
-
 # Copy the entry point file
 COPY Docker/entry.sh ./
 

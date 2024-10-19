@@ -2,5 +2,3 @@
 
 cd /workspace/q
 CGO_ENABLED=0 go build -buildvcs=false -o /workspace/q/q .
-
-# CGO_ENABLED=0 go build -buildvcs=false -o /workspace/q/client ./indexer/client

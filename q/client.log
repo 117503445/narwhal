@@ -1,4 +1,0 @@
-Hello from client!
-{"level":"debug","time":"2024-10-19T13:01:33+08:00","message":"Hello from client!"}
-{"level":"info","time":"2024-10-19T13:01:33+08:00","message":"addr: http://localhost:40050, id: 12345"}
-{"level":"info","time":"2024-10-19T13:01:33+08:00","message":"-----------------"}
