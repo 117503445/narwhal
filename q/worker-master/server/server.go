@@ -5,31 +5,35 @@ import (
 	// "fmt"
 	"net"
 	"os"
+
 	// "q/executor/store"
+	"q/common"
 	"q/rpc"
 	"strconv"
+
 	// "strings"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	// "google.golang.org/grpc/credentials/insecure"
-	// "google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Server struct {
-	rpc.UnimplementedPrimaryToWorkerServer
+	rpc.UnimplementedQWorkerMasterServer
 
-	id int // id of this worker
+	id int // id of this master server
 
 	// executorGrpcClients map[int]rpc.ExecutorClient // id -> client
 
-	// checkPointStore *store.CheckPointStore
+	transactionsClient rpc.TransactionsClient
 }
 
-func (s *Server) SendMessage(_ context.Context, in *rpc.BincodeEncodedPayload) (*rpc.Empty, error) {
-	log.Info().Msg("UnimplementedPrimaryToWorkerServer.SendMessage")
+func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
+	common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
 
-	return &rpc.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (s *Server) Run() {
@@ -63,7 +67,7 @@ func (s *Server) Run() {
 	}
 
 	grpcS := grpc.NewServer()
-	rpc.RegisterPrimaryToWorkerServer(grpcS, s)
+	rpc.RegisterQWorkerMasterServer(grpcS, s)
 
 	if err := grpcS.Serve(lis); err != nil {
 		log.Fatal().Err(err).Msg("failed to serve")
@@ -71,5 +75,15 @@ func (s *Server) Run() {
 }
 
 func NewServer() *Server {
-	return &Server{}
+
+	creds := insecure.NewCredentials()
+	conn, err := grpc.NewClient("localhost:4001", grpc.WithTransportCredentials(creds))
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to dial")
+	}
+	client := rpc.NewTransactionsClient(conn)
+
+	return &Server{
+		transactionsClient: client,
+	}
 }
