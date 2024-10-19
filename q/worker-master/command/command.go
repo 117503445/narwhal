@@ -1,7 +1,7 @@
 package command
 
 import (
-	"q/worker/server"
+	"q/worker-master/server"
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"

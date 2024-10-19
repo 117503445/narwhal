@@ -6,7 +6,7 @@ import (
 	dev "q/dev/command"
 	executor "q/executor/command"
 	sendreq "q/sendreq/command"
-	worker "q/worker/command"
+	worker "q/worker-master/command"
 )
 
 type DefaultCmd struct {
