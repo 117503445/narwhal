@@ -18,7 +18,7 @@ use tracing::debug;
 use types::{
     metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber, ExecutorClient, ExecuteInfo,
 };
-use tonic::{transport::Channel, Code};
+use tonic::{transport::Channel};
 // use backtrace::Backtrace;
 // use std::panic;
 #[cfg(test)]
