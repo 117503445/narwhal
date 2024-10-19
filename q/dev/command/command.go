@@ -64,7 +64,7 @@ func (b *BuildCmd) Run() error {
 
 	goutils.Exec("docker build -t 117503445/narwhal .", goutils.WithCwd("../"))
 
-	UpdateTemplate()
+	// UpdateTemplate()
 
 	goutils.Exec("docker compose up -d --build", goutils.WithCwd("../Docker"))
 

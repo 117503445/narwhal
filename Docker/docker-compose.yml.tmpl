@@ -72,6 +72,4 @@ services:
       - ./logs:/logs
       - ./data/indexer-{{$i}}:/data
     init: true
-    ports:
-      - "4005{{ $i }}:3005{{ $i }}"
 {{- end }}
