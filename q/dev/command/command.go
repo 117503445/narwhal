@@ -1,7 +1,9 @@
 package command
 
 import (
+	"fmt"
 	"os"
+	"sync"
 	"text/template"
 	"time"
 
@@ -45,10 +47,38 @@ func UpdateTemplate() {
 	}
 }
 
-func SendReq(){
+func SendReq() {
 	// goutils.Exec("docker compose exec -T worker_0 ./bin/benchmark_client --nodes http://localhost:4001 --rate 20 --size 10 http://localhost:4001", goutils.WithCwd("../Docker"))
 
 	goutils.Exec("docker compose exec -T worker_0 ./bin/q send-req", goutils.WithCwd("../Docker"))
+}
+
+func DeployFC() {
+	var err error
+	// 创建 "q/assets/fc-worker/data"
+	// if err = os.MkdirAll("../q/assets/fc-worker/data", 0755); err != nil {
+	// 	log.Fatal().Err(err).Msg("failed to create dir")
+	// }
+
+
+	for nodeIndex := 0; nodeIndex < 4; nodeIndex++ {
+		i := 0
+
+		// 复制 "q/assets/fc-worker/s.yaml" 到 "q/assets/fc-worker/data/nodeIndex_i/s.yaml"
+		// src := "../q/assets/fc-worker/s.yaml"
+		// dst := fmt.Sprintf("../q/assets/fc-worker/data/%d_%d/s.yaml", nodeIndex, i)
+
+		// if err = goutils.CopyFile(src, dst); err != nil {
+		// 	log.Fatal().Err(err).Msg("failed to copy file")
+		// }
+
+		// 创建 q/assets/fc-worker/data/nodeIndex_i
+		if err = os.MkdirAll(fmt.Sprintf("../q/assets/fc-worker/data/%d_%d", nodeIndex, i), 0755); err != nil {
+			log.Fatal().Err(err).Msg("failed to create dir")
+		}
+
+
+	}
 }
 
 type BuildCmd struct {
@@ -75,16 +105,19 @@ func (b *BuildCmd) Run() error {
 
 	goutils.Exec("docker compose up -d --build", goutils.WithCwd("../Docker"))
 
-	// goutils.Exec("go build .", goutils.WithCwd("./assets/fc-worker"), goutils.WithEnv(map[string]string{
-	// 	"GOOS":        "linux",
-	// 	"GOARCH":      "amd64",
-	// 	"CGO_ENABLED": "0",
-	// }))
+	var wg sync.WaitGroup
 
+	wg.Add(1)
+	go func() {
+		time.Sleep(3 * time.Second)
+		SendReq()
+		wg.Done()
+	}()
+
+	DeployFC()
 	// goutils.Exec("docker compose exec -T --workdir /workspace/q/assets/fc-worker fc s deploy -y", goutils.WithCwd("../"))
 
-	time.Sleep(3 * time.Second)
-	SendReq()
+	wg.Wait()
 
 	return nil
 }
@@ -103,7 +136,6 @@ type Dev0CMD struct {
 
 func (r *Dev0CMD) Run() error {
 	log.Debug().Msg("dev-0")
-
 
 	return nil
 }

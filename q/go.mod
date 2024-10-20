@@ -3,7 +3,7 @@ module q
 go 1.23.1
 
 require (
-	github.com/117503445/goutils v0.0.0-20241004200223-b1ef83cd0010
+	github.com/117503445/goutils v0.0.0-20241020033334-ec3a6d3da345
 	github.com/alecthomas/kong v1.2.1
 	github.com/rs/zerolog v1.33.0
 	google.golang.org/grpc v1.67.1
