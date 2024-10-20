@@ -3,9 +3,10 @@ package command
 import (
 	"os"
 	"os/signal"
-	"q/indexer/server"
 	"q/indexer/node"
+	"q/indexer/server"
 	"q/rpc"
+	"strings"
 	"syscall"
 
 	"github.com/117503445/goutils"
@@ -28,7 +29,16 @@ func (ic *IndexerCmd) Run() error {
 	log.Info().Msg("Indexer Run")
 
 	port := ic.getGrpcPort()
-	reqCh := make(chan *rpc.IndexerReq, 1024)
+	prefix := os.Getenv("PRIFIX")
+    parentStr := os.Getenv("PARENT_STR")
+    childStr := os.Getenv("CHILD_STR")
+	// 解析 childStr
+    var children []string
+    if childStr != "" {
+        children = strings.Split(childStr, " ")
+    }
+
+	reqCh := make(chan *rpc.QueryMsg, 1024)
 	server := server.NewServer(reqCh)
 	node := node.NewNode(reqCh)
 

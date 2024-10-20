@@ -44,7 +44,7 @@ func (e *IndexerClientCmd) Run() error {
     // 启动一个 goroutine 发送消息
     go func() {
         for {
-            if err := stream.Send(&rpc.IndexerReq{Id: "/123"}); err != nil {
+            if err := stream.Send(&rpc.QueryMsg{Type: rpc.QueryMsg_FIRST, Prefix: "/123"}); err != nil {
                 log.Error().Msgf("failed to send a request: %v", err)
                 return
             }

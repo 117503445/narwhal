@@ -11,7 +11,7 @@ import (
 
 type Server struct {
 	rpc.UnimplementedIndexerServer
-	recvChan chan *rpc.IndexerReq
+	recvChan chan *rpc.QueryMsg
 }
 
 func (s *Server) SendIndexReq(stream rpc.Indexer_SendIndexReqServer) error {
@@ -28,8 +28,8 @@ func (s *Server) SendIndexReq(stream rpc.Indexer_SendIndexReqServer) error {
         s.recvChan <- req
 
 		// todo
-        resp := &rpc.IndexerResp{
-            Id:   req.Id,
+        resp := &rpc.QueryMsg{
+            Prefix:   req.Prefix,
             Addr: "some-address", // 这里可以根据实际情况设置
         }
 
@@ -57,7 +57,7 @@ func (s *Server) Run(port string) {
 	}
 }
 
-func NewServer(recvChan chan *rpc.IndexerReq) *Server {
+func NewServer(recvChan chan *rpc.QueryMsg) *Server {
 	return &Server{
 		recvChan: recvChan,
 	}
