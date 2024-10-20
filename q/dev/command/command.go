@@ -16,11 +16,12 @@ func UpdateTemplate() {
 	// 基于 ../Docker/docker-compose.yml.tmpl 生成 ../Docker/docker-compose.yml
 	log.Debug().Msg("update template")
 
-	tmplBytes, err := os.ReadFile("../Docker/docker-compose.yml.tmpl")
+	var err error
+
+	tmpl, err := goutils.ReadText("../Docker/docker-compose.yml.tmpl")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to read file")
 	}
-	tmpl := string(tmplBytes)
 
 	// 注册一个自定义函数，用于生成 0 到 n-1 的数字
 	funcMap := template.FuncMap{
@@ -53,13 +54,18 @@ func SendReq() {
 	goutils.Exec("docker compose exec -T worker_0 ./bin/q send-req", goutils.WithCwd("../Docker"))
 }
 
-func DeployFC() {
+func DeployFC(wg *sync.WaitGroup) {
 	var err error
 	// 创建 "q/assets/fc-worker/data"
 	// if err = os.MkdirAll("../q/assets/fc-worker/data", 0755); err != nil {
 	// 	log.Fatal().Err(err).Msg("failed to create dir")
 	// }
 
+	tmpl, err := goutils.ReadText("../q/assets/fc-worker/s.yaml.tmpl")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to read file")
+	}
+	t := template.Must(template.New("s").Parse(tmpl))
 
 	for nodeIndex := 0; nodeIndex < 4; nodeIndex++ {
 		i := 0
@@ -72,12 +78,31 @@ func DeployFC() {
 		// 	log.Fatal().Err(err).Msg("failed to copy file")
 		// }
 
+		dstDir := fmt.Sprintf("../q/assets/fc-worker/data/%d_%d", nodeIndex, i)
+		dstDirInDocker := fmt.Sprintf("/workspace/q/assets/fc-worker/data/%d_%d", nodeIndex, i)
+
 		// 创建 q/assets/fc-worker/data/nodeIndex_i
-		if err = os.MkdirAll(fmt.Sprintf("../q/assets/fc-worker/data/%d_%d", nodeIndex, i), 0755); err != nil {
+		if err = os.MkdirAll(dstDir, 0755); err != nil {
 			log.Fatal().Err(err).Msg("failed to create dir")
 		}
 
+		f, err := os.Create(dstDir + "/s.yaml")
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to create file")
+		}
+		defer f.Close()
 
+		functionName := fmt.Sprintf("biye-%d-%d", nodeIndex, i)
+		err = t.Execute(f, map[string]string{"functionName": functionName})
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to execute template")
+		}
+		wg.Add(1)
+		go func(dstDir string) {
+			defer wg.Done()
+			cmd := fmt.Sprintf("docker compose exec -T --workdir %v fc s deploy -y", dstDirInDocker)
+			goutils.Exec(cmd, goutils.WithCwd("../"))
+		}(dstDirInDocker)
 	}
 }
 
@@ -114,7 +139,7 @@ func (b *BuildCmd) Run() error {
 		wg.Done()
 	}()
 
-	DeployFC()
+	DeployFC(&wg)
 	// goutils.Exec("docker compose exec -T --workdir /workspace/q/assets/fc-worker fc s deploy -y", goutils.WithCwd("../"))
 
 	wg.Wait()

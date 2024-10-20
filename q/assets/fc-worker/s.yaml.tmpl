@@ -24,7 +24,7 @@ resources:
         logBeginRule: DefaultRegex
         project: aliyun-fc-cn-hangzhou-ad10cb59-a595-51d8-a660-1c81bfc11ac3
         logstore: function-log
-      functionName: {{$functionName}}
+      functionName: {{.functionName}}
       runtime: custom.debian10
       cpu: 0.35
       version: LATEST
@@ -35,7 +35,7 @@ resources:
           /opt/Go1/bin:/usr/local/bin/apache-maven/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ruby/bin:/opt/bin:/code:/code/bin
         LD_LIBRARY_PATH: >-
           /code:/code/lib:/usr/local/lib:/opt/lib:/opt/php8.1/lib:/opt/php8.0/lib:/opt/php7.2/lib
-      code: ./fc-worker
+      code: ../../fc-worker
       triggers:
         - triggerConfig:
             methods:
