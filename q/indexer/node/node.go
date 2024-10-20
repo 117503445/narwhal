@@ -263,6 +263,4 @@ func calFirstMismatchIndex(reqPrefix string, ndPrefix string) int {
         return i
     }
     return j
-	// log.Info().Msgf("ywb firstMismatchIndex: %d", firstMismatchIndex)
-	
 }
