@@ -2,12 +2,27 @@ package main
 
 import (
 	// "fmt"
+	"context"
 	"net/http"
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
+
 	// "time"
+	"q/qrpc"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+type Server struct {
+	//Start(context.Context, *google_protobuf.Empty) (*google_protobuf.Empty, error)
+}
+
+func (s *Server) Start(ctx context.Context, in *emptypb.Empty) (*qrpc.StartResponse, error) {
+	return &qrpc.StartResponse{
+		Msg: "Hello, World!",
+	}, nil
+}
 
 func main() {
 	// 注意：Go 为编译型语言，直接修改代码不能直接生效！请在控制台右上角“导出代码”，然后根据 README.md 中的说明编译代码并重新上传。
@@ -19,7 +34,11 @@ func main() {
 
 	log.Info().Msg("Starting server...")
 
-	http.HandleFunc("/", HelloServer)
+	rpcServer := &Server{}
+	twirpHandler := qrpc.NewWorkerSlaveServer(rpcServer)
+
+	// http.HandleFunc("/", HelloServer)
+	http.Handle("/", twirpHandler)
 	http.ListenAndServe(":9000", nil)
 }
 

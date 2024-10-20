@@ -2,4 +2,4 @@
 
 set -e
 
-docker compose up -d && docker compose exec -T q-dev /workspace/q/script/proto.sh # 生成 proto 文件
+docker compose up -d --build && docker compose exec -T q-dev /workspace/q/script/proto.sh # 生成 proto 文件
