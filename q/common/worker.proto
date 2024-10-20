@@ -10,8 +10,20 @@ import "google/protobuf/empty.proto";
 service WorkerSlave {
   rpc Start(google.protobuf.Empty) returns (StartResponse);
   rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc Exit(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // 要求 Slave 广播这个 batch
+  rpc PutBatch(PutBatchRequest) returns (google.protobuf.Empty);
+
+  // Slave To Slave，不需要再次广播
+  rpc ReceiveBatch(PutBatchRequest) returns (google.protobuf.Empty);
 }
 
 message StartResponse {
     string msg = 1;
+}
+
+message PutBatchRequest {
+    string payload = 1;
+    string id = 2;
 }

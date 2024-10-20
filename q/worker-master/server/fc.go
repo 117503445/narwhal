@@ -27,13 +27,14 @@ func (c *FcConnection) Start() {
 	go func() {
 		log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Start")
 
+		// 10分钟后自动停止
 		go func() {
-			time.Sleep(10 * time.Second)
+			time.Sleep(10 * time.Minute)
 			log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Stop")
 			c.client.Stop(context.Background(), nil)
 			log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Stop done")
 		}()
-		
+
 		c.client.Start(context.Background(), nil)
 		log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Start done")
 	}()

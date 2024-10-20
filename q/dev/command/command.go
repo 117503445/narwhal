@@ -93,7 +93,7 @@ func DeployFC(wg *sync.WaitGroup) {
 		defer f.Close()
 
 		functionName := fmt.Sprintf("biye-%d-%d", nodeIndex, i)
-		err = t.Execute(f, map[string]string{"functionName": functionName})
+		err = t.Execute(f, map[string]string{"functionName": functionName, "slaveId": fmt.Sprintf("%d", i)})
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to execute template")
 		}

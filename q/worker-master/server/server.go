@@ -3,12 +3,14 @@ package server
 import (
 	"context"
 	"time"
+
 	// "fmt"
 	"net"
 	"os"
 
 	// "q/executor/store"
 	"q/common"
+	"q/qrpc"
 	"q/rpc"
 	"strconv"
 
@@ -43,6 +45,14 @@ func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empt
 	// common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
 	log.Info().Msg("PutTx")
 	s.fcManager.MustStartInstance(0)
+
+	time.Sleep(1 * time.Second)
+	if _, err := s.fcManager.conns[0].client.PutBatch(context.Background(), &qrpc.PutBatchRequest{
+		Payload: in.Payload,
+		Id:      "batch0",
+	}); err != nil {
+		log.Fatal().Err(err).Msg("failed to PutBatch")
+	}
 
 	return &emptypb.Empty{}, nil
 }
@@ -96,6 +106,14 @@ func NewServer() *Server {
 		transactionsClient: client,
 		id:                 id,
 		fcManager:          NewFcManager(id),
+	}
+
+	if s.fcManager.IsInstanceRunning(0) {
+		s.fcManager.conns[0].client.Exit(context.Background(), nil)
+		time.Sleep(1 * time.Second)
+		if s.fcManager.IsInstanceRunning(0){
+			log.Fatal().Msg("failed to stop instance")
+		}
 	}
 
 	// 测试用
