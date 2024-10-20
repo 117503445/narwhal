@@ -70,6 +70,13 @@ elif [[ "$NODE_TYPE" = "qexecutor" ]]; then
   echo "" > $LOG_PATH
 
   ./bin/q executor > $LOG_PATH 2>&1
+elif [[ "$NODE_TYPE" = "q-worker-master" ]]; then
+  echo "Bootstrapping new worker-master node with id $WORKER_MASTER_ID"
+
+  LOG_PATH="/logs/validator-$WORKER_MASTER_ID-q-worker-master.log"
+  echo "" > $LOG_PATH
+
+  ./bin/q worker-master > $LOG_PATH 2>&1
 else
   echo "Unknown provided value for parameter: NODE_TYPE=$NODE_TYPE"
   exit 1

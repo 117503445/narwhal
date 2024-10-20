@@ -40,10 +40,10 @@ func (s *Server) Run() {
 
 	// s.checkPointStore = store.NewCheckPointStore()
 
-	idStr := os.Getenv("EXECUTOR_ID")
+	idStr := os.Getenv("WORKER_MASTER_ID")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		log.Fatal().Err(err).Msg("invalid EXECUTOR_ID")
+		log.Fatal().Err(err).Msg("invalid WORKER_MASTER_ID")
 	}
 	s.id = id
 

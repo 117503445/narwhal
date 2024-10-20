@@ -12,7 +12,7 @@ type WorkerCmd struct {
 
 func (*WorkerCmd) Run() error {
 	goutils.InitZeroLog(goutils.WithNoColor{})
-	log.Info().Msg("Worker Run")
+	log.Info().Msg("WORKER MASTER Run")
 
 	server.NewServer().Run()
 

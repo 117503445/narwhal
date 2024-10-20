@@ -23,7 +23,7 @@ var cli struct {
 	Req               dev.ReqCMD                             `cmd:"" help:"Call SendReq in Docker"`
 	Dev0              dev.Dev0CMD                            `cmd:""`
 	Executor          executor.ExecutorCmd                   `cmd:""`
-	Worker            worker.WorkerCmd                       `cmd:""`
+	WorkerMaster      worker.WorkerCmd                       `cmd:""`
 	SendReq           sendreq.SendReqCmd                     `cmd:"" help:"send a request to the worker"`
 	WorkerSlaveClient workerSlaveClient.WorkerSlaveClientCmd `cmd:""`
 }

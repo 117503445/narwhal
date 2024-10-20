@@ -56,4 +56,25 @@ services:
       - ./validators/validator-{{$i}}/logs:/home/logs
       - ./logs:/logs
     init: true
+
+  q-worker-master_{{$i}}:
+    image: 117503445/narwhal
+    depends_on:
+      - primary_{{$i}}
+    environment:
+      - NODE_TYPE=q-worker-master
+      - WORKER_MASTER_ID={{ $i }}
+      - LOG_LEVEL=-vvv
+      - WORKER_ID=0
+    # expose:
+    #   - "4000" # Port to listen on messages from our primary node
+    #   - "4001" # Port to listen for transactions from clients
+    #   - "4002" # Port to listen on messages from other worker nodes
+    # ports:
+    #   - "700{{$i}}:4001" # expose the port for the worker to accept transactions from clients
+    volumes:
+      - ./validators:/validators
+      - ./validators/validator-{{$i}}/logs:/home/logs
+      - ./logs:/logs
+    init: true
 {{- end }}
