@@ -16,6 +16,7 @@ func init() {
 	if ak == "" {
 		return
 	}
+	log.Info().Msg("init fc client")
 	sk := os.Getenv("sk")
 
 	config := &openapi.Config{

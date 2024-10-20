@@ -107,6 +107,10 @@ FROM registry.cn-hangzhou.aliyuncs.com/117503445-mirror/sync:linux.amd64.docker.
 COPY Docker/sources.list /etc/apt/sources.list
 WORKDIR "/workspace"
 
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl
+
 # Copy the Narwhal node binary to bin folder
 COPY ./docker-target/debug/node bin/
 

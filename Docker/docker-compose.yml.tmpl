@@ -56,8 +56,7 @@ services:
       - ./validators/validator-{{$i}}/logs:/home/logs
       - ./logs:/logs
     init: true
-    env_file:
-      - .env
+
 
   q-worker-master_{{$i}}:
     image: 117503445/narwhal
@@ -79,4 +78,6 @@ services:
       - ./validators/validator-{{$i}}/logs:/home/logs
       - ./logs:/logs
     init: true
+    env_file:
+      - .env
 {{- end }}
