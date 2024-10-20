@@ -42,7 +42,7 @@ func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.
 func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
 	// common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
 	log.Info().Msg("PutTx")
-	s.fcManager.GetInfo(0)
+	s.fcManager.MustStartInstance(0)
 
 	return &emptypb.Empty{}, nil
 }
