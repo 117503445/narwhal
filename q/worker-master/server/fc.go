@@ -7,6 +7,7 @@ import (
 	"q/common"
 	"q/qrpc"
 	"sync"
+	"time"
 
 	"github.com/117503445/goutils"
 	fc20230330 "github.com/alibabacloud-go/fc-20230330/v4/client"
@@ -22,19 +23,26 @@ type FcConnection struct {
 	sync.Mutex
 }
 
-func NewFcConnection(masterID int, instanceID int, baseURL string) *FcConnection {
-
-	client := qrpc.NewWorkerSlaveProtobufClient(baseURL, &http.Client{})
-
-	return &FcConnection{instanceID: instanceID, status: "stopped", client: client}
-}
-
 func (c *FcConnection) Start() {
 	go func() {
 		log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Start")
+
+		go func() {
+			time.Sleep(10 * time.Second)
+			log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Stop")
+			c.client.Stop(context.Background(), nil)
+			log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Stop done")
+		}()
+		
 		c.client.Start(context.Background(), nil)
 		log.Info().Int("instanceID", c.instanceID).Msg("FcConnection Start done")
 	}()
+}
+
+func NewFcConnection(masterID int, instanceID int, baseURL string) *FcConnection {
+	client := qrpc.NewWorkerSlaveProtobufClient(baseURL, &http.Client{})
+
+	return &FcConnection{instanceID: instanceID, status: "stopped", client: client}
 }
 
 // FcManager 管理函数计算的实例
@@ -55,9 +63,9 @@ func NewFcManager(masterID int) *FcManager {
 
 	conns := make(map[int]*FcConnection)
 	for i := 0; i < 1; i++ {
-		conns[i] = NewFcConnection(masterID, i, urlMap[fmt.Sprintf("%s", masterID)][i])
+		conns[i] = NewFcConnection(masterID, i, urlMap[fmt.Sprintf("%d", masterID)][i])
 	}
-	return &FcManager{masterID: masterID, conns: make(map[int]*FcConnection)}
+	return &FcManager{masterID: masterID, conns: conns}
 }
 
 // IsInstanceRunning 获取第 index 个函数计算实例的信息
@@ -73,5 +81,8 @@ func (m *FcManager) IsInstanceRunning(index int) bool {
 }
 
 func (m *FcManager) MustStartInstance(index int) {
+	if m.conns[index] == nil {
+		log.Fatal().Int("index", index).Msg("FcConnection not found")
+	}
 	m.conns[index].Start()
 }

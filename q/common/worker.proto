@@ -9,6 +9,7 @@ import "google/protobuf/empty.proto";
 
 service WorkerSlave {
   rpc Start(google.protobuf.Empty) returns (StartResponse);
+  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message StartResponse {
