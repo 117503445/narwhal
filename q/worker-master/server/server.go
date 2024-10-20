@@ -28,6 +28,8 @@ type Server struct {
 	// executorGrpcClients map[int]rpc.ExecutorClient // id -> client
 
 	transactionsClient rpc.TransactionsClient
+
+	fcManager *FcManager
 }
 
 func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
@@ -36,16 +38,17 @@ func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.
 	return &emptypb.Empty{}, nil
 }
 
+func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
+	// common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
+	log.Info().Msg("PutTx")
+	s.fcManager.GetInfo(0)
+
+	return &emptypb.Empty{}, nil
+}
+
 func (s *Server) Run() {
 
 	// s.checkPointStore = store.NewCheckPointStore()
-
-	idStr := os.Getenv("WORKER_MASTER_ID")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.Fatal().Err(err).Msg("invalid WORKER_MASTER_ID")
-	}
-	s.id = id
 
 	// executorsAddr := os.Getenv("EXECUTORS_ADDR")
 	// log.Info().Str("executorsAddr", executorsAddr).Msg("")
@@ -75,6 +78,11 @@ func (s *Server) Run() {
 }
 
 func NewServer() *Server {
+	idStr := os.Getenv("WORKER_MASTER_ID")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Fatal().Err(err).Msg("invalid WORKER_MASTER_ID")
+	}
 
 	creds := insecure.NewCredentials()
 	conn, err := grpc.NewClient("localhost:4001", grpc.WithTransportCredentials(creds))
@@ -85,5 +93,7 @@ func NewServer() *Server {
 
 	return &Server{
 		transactionsClient: client,
+		id:                 id,
+		fcManager:          NewFcManager(id),
 	}
 }
