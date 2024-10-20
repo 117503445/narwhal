@@ -5,6 +5,7 @@ option go_package = "./rpc";
 
 service Indexer {
 	rpc SendIndexReq(stream QueryMsg) returns (stream QueryMsg) {}
+	rpc Send(QueryMsg) returns (QueryMsg) {}
 }
 
 message IndexerReq {

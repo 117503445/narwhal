@@ -92,7 +92,7 @@ type IndexReqCMD struct {
 }
 
 func (r *IndexReqCMD) Run() error {
-	goutils.Exec("docker compose exec -T indexer_0 ./bin/q indexer-client", goutils.WithCwd("../Docker"))
+	goutils.Exec("docker compose exec -T indexer_1 ./bin/q indexer-client", goutils.WithCwd("../Docker"))
 
 	return nil
 }

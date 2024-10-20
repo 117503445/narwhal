@@ -1,17 +1,21 @@
 package server
 
 import (
+	"context"
 	"io"
 	"net"
 	"q/rpc"
-
+	"q/indexer/node"
+	"q/indexer/common"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
 type Server struct {
 	rpc.UnimplementedIndexerServer
-	recvChan chan *rpc.QueryMsg
+	node      *node.Node
+	recvChan  chan *common.ReqWithCh
+	respCh    chan *rpc.QueryMsg
 }
 
 func (s *Server) SendIndexReq(stream rpc.Indexer_SendIndexReqServer) error {
@@ -25,19 +29,26 @@ func (s *Server) SendIndexReq(stream rpc.Indexer_SendIndexReqServer) error {
             return err
         }
 
-        s.recvChan <- req
-
+		resCh := make(chan *rpc.QueryMsg)
+        s.recvChan <- &common.ReqWithCh{Req: req, ResCh: resCh}
+		resp := <- resCh
 		// todo
-        resp := &rpc.QueryMsg{
-            Prefix:   req.Prefix,
-            Addr: "some-address", // 这里可以根据实际情况设置
-        }
 
         if err := stream.Send(resp); err != nil {
             log.Error().Err(err).Msg("failed to send response")
             return err
         }
     }
+}
+
+func (s *Server) Send(_ context.Context, in *rpc.QueryMsg) (*rpc.QueryMsg, error) {
+	resCh := make(chan *rpc.QueryMsg)
+	// 打印in
+	log.Info().Msgf("收到请求 : %v", in)
+	msg := &common.ReqWithCh{Req: in, ResCh: resCh}
+	s.recvChan <- msg
+	resp := <- resCh
+	return resp, nil
 }
 
 func (s *Server) Run(port string) {
@@ -57,8 +68,10 @@ func (s *Server) Run(port string) {
 	}
 }
 
-func NewServer(recvChan chan *rpc.QueryMsg) *Server {
+func NewServer(node *node.Node, recvChan chan *common.ReqWithCh, respCh chan *rpc.QueryMsg) *Server {
 	return &Server{
+		node: node,
 		recvChan: recvChan,
+		respCh: respCh,
 	}
 }

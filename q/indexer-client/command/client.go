@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"q/rpc"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-		"os"
-
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 
@@ -24,7 +24,8 @@ func (e *IndexerClientCmd) Run() error {
 	log.Debug().Msg("Hello from client!")
 
     // 连接到 gRPC 服务器
-	conn, err := grpc.Dial("localhost:30050", grpc.WithInsecure(), grpc.WithBlock())
+	creds := insecure.NewCredentials()
+	conn, err := grpc.NewClient("indexer_3:30053", grpc.WithTransportCredentials(creds))
     if err != nil {
         log.Error().Msgf("did not connect: %v", err)
     }
@@ -34,7 +35,6 @@ func (e *IndexerClientCmd) Run() error {
     // 创建上下文并发送请求
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
-	log.Info().Msg("111111111111")
     stream, err := c.SendIndexReq(ctx)
     if err != nil {
         log.Error().Msgf("could not send request: %v", err)
@@ -44,12 +44,12 @@ func (e *IndexerClientCmd) Run() error {
     // 启动一个 goroutine 发送消息
     go func() {
         for {
-            if err := stream.Send(&rpc.QueryMsg{Type: rpc.QueryMsg_FIRST, Prefix: "/123"}); err != nil {
+            if err := stream.Send(&rpc.QueryMsg{Type: rpc.QueryMsg_FIRST, Prefix: "/a"}); err != nil {
                 log.Error().Msgf("failed to send a request: %v", err)
                 return
             }
 			log.Info().Msg("send")
-            time.Sleep(1 * time.Second) // 模拟发送间隔
+            time.Sleep(5 * time.Second) // 模拟发送间隔
         }
     }()
 
