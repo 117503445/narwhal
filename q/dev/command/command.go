@@ -110,6 +110,8 @@ type BuildCmd struct {
 }
 
 func (b *BuildCmd) Run() error {
+	var wg sync.WaitGroup
+
 	deleteOld := false // 删除旧的数据
 	if deleteOld {
 		goutils.Exec("docker compose down", goutils.WithCwd("../Docker"))
@@ -117,32 +119,34 @@ func (b *BuildCmd) Run() error {
 
 	goutils.Exec("docker compose up -d", goutils.WithCwd("../"))
 
-	// -T 避免 the input device is not a TTY
-	goutils.Exec("docker compose exec -T builder cargo build --target-dir docker-target --bin node --bin benchmark_client", goutils.WithCwd("../"))
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// -T 避免 the input device is not a TTY
+		goutils.Exec("docker compose exec -T builder cargo build --target-dir docker-target --bin node --bin benchmark_client", goutils.WithCwd("../"))
 
-	goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
+		goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
 
-	goutils.Exec("docker compose exec -T q-dev /workspace/q/script/proto.sh", goutils.WithCwd("../"))
+		goutils.Exec("docker compose exec -T q-dev /workspace/q/script/proto.sh", goutils.WithCwd("../"))
 
-	goutils.Exec("docker build -t 117503445/narwhal .", goutils.WithCwd("../"))
+		goutils.Exec("docker build -t 117503445/narwhal .", goutils.WithCwd("../"))
 
-	UpdateTemplate()
-
-	goutils.Exec("docker compose up -d --build", goutils.WithCwd("../Docker"))
-
-	var wg sync.WaitGroup
+		UpdateTemplate()
+	}()
 
 	wg.Add(1)
 	go func() {
-		time.Sleep(3 * time.Second)
-		SendReq()
-		wg.Done()
+		defer wg.Done()
+		DeployFC(&wg)
 	}()
 
-	DeployFC(&wg)
 	// goutils.Exec("docker compose exec -T --workdir /workspace/q/assets/fc-worker fc s deploy -y", goutils.WithCwd("../"))
 
 	wg.Wait()
+
+	goutils.Exec("docker compose up -d --build", goutils.WithCwd("../Docker"))
+	time.Sleep(3 * time.Second)
+	SendReq()
 
 	return nil
 }

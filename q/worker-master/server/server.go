@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"time"
 	// "fmt"
 	"net"
 	"os"
@@ -91,9 +92,17 @@ func NewServer() *Server {
 	}
 	client := rpc.NewTransactionsClient(conn)
 
-	return &Server{
+	s := &Server{
 		transactionsClient: client,
 		id:                 id,
 		fcManager:          NewFcManager(id),
 	}
+
+	// 测试用
+	go func() {
+		time.Sleep(1 * time.Second)
+		s.PutTx(context.Background(), &rpc.QTransaction{})
+	}()
+
+	return s
 }
