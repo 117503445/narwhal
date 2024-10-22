@@ -36,3 +36,4 @@ docker-target
 builder-cargo
 
 primary.log
+Docker/validators/eci.pb

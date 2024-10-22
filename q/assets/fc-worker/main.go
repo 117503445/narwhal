@@ -50,6 +50,8 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 	log.Info().Interface("workersNetInfo", in).Msg("PutWorkersNetInfo")
 
 	s.Lock()
+	defer s.Unlock()
+	
 	s.clients = make(map[int]map[int]qrpc.WorkerSlave)
 	for _, worker := range in.Workers {
 		nodeID := int(worker.NodeIndex)

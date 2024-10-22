@@ -68,9 +68,13 @@ type ECIMeta struct {
 	WorkerID int
 }
 
-func DeployECI() {
+var expID string
 
-	expID := goutils.TimeStrSec()
+func init() {
+	expID = goutils.TimeStrSec()
+}
+
+func DeployECI() {
 	w := &qrpc.WorkersNetInfo{
 		ExpId: expID,
 	}
@@ -99,20 +103,22 @@ func DeployECI() {
 			Container: []*eci20180808.CreateContainerGroupRequestContainer{
 				{
 					Name:  tea.String("worker"),
-					Image: tea.String("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave"),
+					Image: tea.String(fmt.Sprintf("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%s", expID)),
 					EnvironmentVar: []*eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
 						{
 							Key:   tea.String("SLAVE_ID"),
-							Value: tea.String("0"),
+							Value: tea.String(fmt.Sprintf("%d", meta.WorkerID)),
 						},
 					},
 				},
 			},
-			RestartPolicy: tea.String("Never"),
-			Cpu:           tea.Float32(2),
-			Memory:        tea.Float32(2),
-			SpotStrategy:  tea.String("SpotAsPriceGo"),
-			AutoCreateEip: tea.Bool(true),
+			RestartPolicy:   tea.String("Never"),
+			Cpu:             tea.Float32(2),
+			Memory:          tea.Float32(2),
+			SpotStrategy:    tea.String("SpotAsPriceGo"),
+			AutoCreateEip:   tea.Bool(true),
+			SecurityGroupId: tea.String("sg-bp1chrrv37a1jm22u1v8"),
+			VSwitchId:       tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
 		})
 
 		if err != nil {
@@ -143,6 +149,7 @@ func DeployECI() {
 						NodeIndex:   int64(meta.NodeID),
 						WorkerIndex: int64(meta.WorkerID),
 					})
+					m.Unlock()
 					break
 				}
 			}
@@ -164,17 +171,24 @@ func DeployECI() {
 
 	wg.Wait()
 
+	log.Info().Msg("all containers created")
+
 	for _, worker := range w.Workers {
 		wg.Add(1)
 		go func(worker *qrpc.WorkerNetInfo) {
 			defer wg.Done()
 			client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
-			resp, err := client.PutWorkersNetInfo(context.TODO(), w)
-			if err != nil {
-				log.Fatal().Err(err).Msg("failed to call PutWorkersNetInfo")
-			}
-			log.Info().Msgf("resp: %v", resp)
 
+			for {
+				resp, err := client.PutWorkersNetInfo(context.TODO(), w)
+				if err != nil {
+					log.Warn().Err(err).Msg("failed to call PutWorkersNetInfo")
+					time.Sleep(time.Second * 3)
+					continue
+				}
+				log.Info().Msgf("resp: %v", resp)
+				break
+			}
 		}(worker)
 	}
 	wg.Wait()
@@ -210,9 +224,10 @@ func (b *BuildCmd) Run() error {
 
 		goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
 
-		goutils.Exec("docker build -t registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave .", goutils.WithCwd("./assets/fc-worker"))
 
-		goutils.Exec("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave", goutils.WithCwd("./assets/fc-worker"))
+		goutils.Exec(fmt.Sprintf("docker build -t registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v .", expID), goutils.WithCwd("./assets/fc-worker"))
+
+		goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
 		DeployECI()
 
