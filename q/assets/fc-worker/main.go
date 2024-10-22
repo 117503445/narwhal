@@ -51,17 +51,28 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 
 	s.Lock()
 	defer s.Unlock()
-	
+
 	s.clients = make(map[int]map[int]qrpc.WorkerSlave)
 	for _, worker := range in.Workers {
 		nodeID := int(worker.NodeIndex)
 		workerID := int(worker.WorkerIndex)
 		if _, ok := s.clients[nodeID]; !ok {
 			s.clients[nodeID] = make(map[int]qrpc.WorkerSlave)
-			s.clients[nodeID][workerID] = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
+			s.clients[nodeID][workerID] = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.IntranetIp), &http.Client{})
 		}
 	}
-
+	go func() {
+		time.Sleep(10 * time.Second)
+		log.Info().Msg("PutBatch")
+		_, err := s.PutBatch(context.Background(), &qrpc.PutBatchRequest{
+			Id:      fmt.Sprintf("from %d", s.id),
+			Payload: fmt.Sprintf("from %d", s.id),
+		})
+		if err != nil {
+			log.Fatal().Err(err).Msg("PutBatch failed")
+		}
+		log.Info().Msg("PutBatch done")
+	}()
 	return &emptypb.Empty{}, nil
 }
 
@@ -126,9 +137,9 @@ func (s *Server) PutBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*empty
 				return
 			}
 			log.Info().Str("batchID", in.Id).Int("nodeID", i).Msg("Call ReceiveBatch")
-			_, err := client.ReceiveBatch(ctx, in)
+			_, err := client.ReceiveBatch(context.Background(), in)
 			if err != nil {
-				log.Error().Err(err).Msg("PutBatch")
+				log.Fatal().Err(err).Msg("ReceiveBatch")
 			}
 			log.Info().Str("batchID", in.Id).Int("nodeID", i).Msg("ReceiveBatch done")
 
@@ -215,7 +226,7 @@ func NewServer() *Server {
 }
 
 func main() {
-	goutils.InitZeroLog()
+	goutils.InitZeroLog(goutils.WithNoColor{})
 
 	log.Info().Msg("Starting server...")
 
