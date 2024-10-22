@@ -2,12 +2,7 @@ package common
 
 import (
 	"os"
-	"strings"
-	"sync"
-	"text/template"
-	"time"
 
-	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -22,8 +17,9 @@ func init() {
 
 	ak := os.Getenv("ak")
 	if ak == "" {
-		log.Fatal().Msg("ak is empty")
+		return
 	}
+	log.Info().Msg("init eci client")
 	sk := os.Getenv("sk")
 	config := &openapi.Config{
 		AccessKeyId:     tea.String(ak),

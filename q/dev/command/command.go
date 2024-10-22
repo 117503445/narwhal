@@ -10,7 +10,6 @@ import (
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
 
-	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	eci20180808 "github.com/alibabacloud-go/eci-20180808/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
 )
@@ -58,9 +57,53 @@ func SendReq() {
 	goutils.Exec("docker compose exec -T worker_0 ./bin/q send-req", goutils.WithCwd("../Docker"))
 }
 
-// func DeployECI() {
+func DeployECI() {
+	result, err := common.EciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{
+		RegionId:           tea.String("cn-hangzhou"),
+		ContainerGroupName: tea.String("biye-0-0"),
+		Container: []*eci20180808.CreateContainerGroupRequestContainer{
+			{
+				Name:  tea.String("worker"),
+				Image: tea.String("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave"),
+				EnvironmentVar: []*eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
+					{
+						Key:   tea.String("SLAVE_ID"),
+						Value: tea.String("0"),
+					},
+				},
+			},
+		},
+		RestartPolicy: tea.String("Never"),
+		Cpu:           tea.Float32(2),
+		Memory:        tea.Float32(2),
+		SpotStrategy:  tea.String("SpotAsPriceGo"),
+		AutoCreateEip: tea.Bool(true),
+	})
 
-// }
+	if err != nil {
+		log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
+	}
+	log.Info().Interface("result", result).Msg("CreateContainerGroupRequest success")
+
+	for {
+		result, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+			RegionId:           tea.String("cn-hangzhou"),
+			ContainerGroupName: tea.String("biye-0-0-" + goutils.TimeStrSec()),
+		})
+		if err != nil {
+			log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
+		}
+
+		internetIp := result.Body.ContainerGroups[0].InternetIp
+		intranetIp := result.Body.ContainerGroups[0].IntranetIp
+		if result.Body.ContainerGroups[0].InternetIp != nil && result.Body.ContainerGroups[0].IntranetIp != nil {
+			log.Info().Str("internetIp", *internetIp).Str("intranetIp", *intranetIp).Msg("DescribeContainerGroupsRequest success")
+			break
+		}
+
+		time.Sleep(time.Second * 3)
+	}
+}
 
 type BuildCmd struct {
 }
@@ -86,6 +129,8 @@ func (b *BuildCmd) Run() error {
 		goutils.Exec("docker build -t registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave .", goutils.WithCwd("./assets/fc-worker"))
 
 		goutils.Exec("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave", goutils.WithCwd("./assets/fc-worker"))
+
+		DeployECI()
 
 		// registry-vpc.cn-hangzhou.aliyuncs.com/117503445/biye-slave
 
