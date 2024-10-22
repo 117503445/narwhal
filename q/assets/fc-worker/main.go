@@ -4,12 +4,13 @@ import (
 	// "fmt"
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	// "fmt"
 	"net/http"
 	"os"
-	"strconv"
+	// "strconv"
 	"sync"
 
 	"github.com/117503445/goutils"
@@ -38,11 +39,28 @@ type Server struct {
 
 	started bool // start should be called only once
 
-	clients map[int][]qrpc.WorkerSlave
+	clients map[int]map[int]qrpc.WorkerSlave
 
 	batchStatus map[string]map[int]bool // batchID -> NodeID -> status
 
 	sync.Mutex
+}
+
+func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo) (*emptypb.Empty, error) {
+	log.Info().Interface("workersNetInfo", in).Msg("PutWorkersNetInfo")
+
+	s.Lock()
+	s.clients = make(map[int]map[int]qrpc.WorkerSlave)
+	for _, worker := range in.Workers {
+		nodeID := int(worker.NodeIndex)
+		workerID := int(worker.WorkerIndex)
+		if _, ok := s.clients[nodeID]; !ok {
+			s.clients[nodeID] = make(map[int]qrpc.WorkerSlave)
+			s.clients[nodeID][workerID] = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
+		}
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (s *Server) Start(ctx context.Context, in *emptypb.Empty) (*qrpc.StartResponse, error) {
@@ -165,32 +183,32 @@ func NewServer() *Server {
 		log.Fatal().Err(err).Msg("failed to unmarshal")
 	}
 
-	clients := make(map[int][]qrpc.WorkerSlave)
-	for strI, urls := range urlMap.URLs {
-		i, err := strconv.Atoi(strI)
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to convert")
-		}
+	// clients := make(map[int][]qrpc.WorkerSlave)
+	// for strI, urls := range urlMap.URLs {
+	// 	i, err := strconv.Atoi(strI)
+	// 	if err != nil {
+	// 		log.Fatal().Err(err).Msg("failed to convert")
+	// 	}
 
-		clients[i] = make([]qrpc.WorkerSlave, len(urls))
-		for j, url := range urls {
-			log.Info().Int("i", i).Int("j", j).Str("url", url).Msg("NewWorkerSlaveProtobufClient")
-			clients[i][j] = qrpc.NewWorkerSlaveProtobufClient(url, &http.Client{})
-		}
-	}
+	// 	clients[i] = make([]qrpc.WorkerSlave, len(urls))
+	// 	for j, url := range urls {
+	// 		log.Info().Int("i", i).Int("j", j).Str("url", url).Msg("NewWorkerSlaveProtobufClient")
+	// 		clients[i][j] = qrpc.NewWorkerSlaveProtobufClient(url, &http.Client{})
+	// 	}
+	// }
 
-	slaveID := os.Getenv("SLAVE_ID")
-	id, err := strconv.Atoi(slaveID)
-	if err != nil {
-		log.Fatal().Err(err).Msg("invalid SLAVE_ID")
-	}
+	// slaveID := os.Getenv("SLAVE_ID")
+	// id, err := strconv.Atoi(slaveID)
+	// if err != nil {
+	// 	log.Fatal().Err(err).Msg("invalid SLAVE_ID")
+	// }
 
 	return &Server{
 		quit:        make(chan struct{}),
 		batchStatus: make(map[string]map[int]bool),
 
-		clients: clients,
-		id:      id,
+		// clients: clients,
+		// id:      id,
 	}
 }
 

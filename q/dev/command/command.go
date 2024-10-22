@@ -1,8 +1,12 @@
 package command
 
 import (
+	"context"
+	"fmt"
+	"net/http"
 	"os"
 	"q/common"
+	"q/qrpc"
 	"sync"
 	"text/template"
 	"time"
@@ -57,52 +61,118 @@ func SendReq() {
 	goutils.Exec("docker compose exec -T worker_0 ./bin/q send-req", goutils.WithCwd("../Docker"))
 }
 
+type ECIMeta struct {
+	ExpID    string
+	NodeID   int
+	WorkerID int
+}
+
 func DeployECI() {
-	result, err := common.EciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{
-		RegionId:           tea.String("cn-hangzhou"),
-		ContainerGroupName: tea.String("biye-0-0"),
-		Container: []*eci20180808.CreateContainerGroupRequestContainer{
-			{
-				Name:  tea.String("worker"),
-				Image: tea.String("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave"),
-				EnvironmentVar: []*eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
-					{
-						Key:   tea.String("SLAVE_ID"),
-						Value: tea.String("0"),
+
+	expID := goutils.TimeStrSec()
+	w := &qrpc.WorkersNetInfo{
+		ExpId: expID,
+	}
+	var m sync.Mutex
+
+	createContainer := func(meta *ECIMeta) {
+		containerGroupName := fmt.Sprintf("biye-%d-%d-%s", meta.NodeID, meta.WorkerID, expID)
+		result, err := common.EciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{
+			RegionId:           tea.String("cn-hangzhou"),
+			ContainerGroupName: tea.String(containerGroupName),
+			Container: []*eci20180808.CreateContainerGroupRequestContainer{
+				{
+					Name:  tea.String("worker"),
+					Image: tea.String("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave"),
+					EnvironmentVar: []*eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
+						{
+							Key:   tea.String("SLAVE_ID"),
+							Value: tea.String("0"),
+						},
 					},
 				},
 			},
-		},
-		RestartPolicy: tea.String("Never"),
-		Cpu:           tea.Float32(2),
-		Memory:        tea.Float32(2),
-		SpotStrategy:  tea.String("SpotAsPriceGo"),
-		AutoCreateEip: tea.Bool(true),
-	})
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
-	}
-	log.Info().Interface("result", result).Msg("CreateContainerGroupRequest success")
-
-	for {
-		result, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
-			RegionId:           tea.String("cn-hangzhou"),
-			ContainerGroupName: tea.String("biye-0-0-" + goutils.TimeStrSec()),
+			RestartPolicy: tea.String("Never"),
+			Cpu:           tea.Float32(2),
+			Memory:        tea.Float32(2),
+			SpotStrategy:  tea.String("SpotAsPriceGo"),
+			AutoCreateEip: tea.Bool(true),
 		})
+
 		if err != nil {
-			log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
+			log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
+		}
+		log.Info().Interface("result", result).Msg("CreateContainerGroupRequest success")
+
+		var internetIp *string
+
+		for {
+			result, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+				RegionId:           tea.String("cn-hangzhou"),
+				ContainerGroupName: tea.String(containerGroupName),
+			})
+			if err != nil {
+				log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
+			}
+			if len(result.Body.ContainerGroups) > 0 {
+				internetIp = result.Body.ContainerGroups[0].InternetIp
+				intranetIp := result.Body.ContainerGroups[0].IntranetIp
+				if result.Body.ContainerGroups[0].InternetIp != nil && result.Body.ContainerGroups[0].IntranetIp != nil {
+					log.Info().Str("internetIp", *internetIp).Str("intranetIp", *intranetIp).Msg("DescribeContainerGroupsRequest success")
+					m.Lock()
+					w.Workers = append(w.Workers, &qrpc.WorkerNetInfo{
+						Name:        fmt.Sprintf("biye-%d-%d", meta.NodeID, meta.WorkerID),
+						InternetIp:  *internetIp,
+						IntranetIp:  *intranetIp,
+						NodeIndex:   int64(meta.NodeID),
+						WorkerIndex: int64(meta.WorkerID),
+					})
+					break
+				}
+			}
+
+			time.Sleep(time.Second * 3)
+			log.Info().Interface("meta", meta).Msg("wait for ip")
 		}
 
-		internetIp := result.Body.ContainerGroups[0].InternetIp
-		intranetIp := result.Body.ContainerGroups[0].IntranetIp
-		if result.Body.ContainerGroups[0].InternetIp != nil && result.Body.ContainerGroups[0].IntranetIp != nil {
-			log.Info().Str("internetIp", *internetIp).Str("intranetIp", *intranetIp).Msg("DescribeContainerGroupsRequest success")
-			break
-		}
-
-		time.Sleep(time.Second * 3)
 	}
+
+	metas := make([]*ECIMeta, 0)
+	for nodeID := 0; nodeID < 1; nodeID++ {
+		for workerID := 0; workerID < 1; workerID++ {
+			metas = append(metas, &ECIMeta{
+				ExpID:    expID,
+				NodeID:   nodeID,
+				WorkerID: workerID,
+			})
+		}
+	}
+
+	var wg sync.WaitGroup
+	for _, meta := range metas {
+		wg.Add(1)
+		go func(meta *ECIMeta) {
+			defer wg.Done()
+			createContainer(meta)
+		}(meta)
+	}
+
+	wg.Wait()
+
+	for _, worker := range w.Workers {
+		wg.Add(1)
+		go func(worker *qrpc.WorkerNetInfo) {
+			defer wg.Done()
+			client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
+			resp, err := client.PutWorkersNetInfo(context.TODO(), w)
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to call PutWorkersNetInfo")
+			}
+			log.Info().Msgf("resp: %v", resp)
+
+		}(worker)
+	}
+	wg.Wait()
 }
 
 type BuildCmd struct {
