@@ -2,7 +2,7 @@ package command
 
 import (
 	"os"
-	"strings"
+	"q/common"
 	"sync"
 	"text/template"
 	"time"
@@ -128,29 +128,14 @@ type DeleteECICMD struct {
 }
 
 func (r *DeleteECICMD) Run() error {
-	loadENV()
+	common.LoadENV()
 
-	ak := os.Getenv("ak")
-	if ak == "" {
-		log.Fatal().Msg("ak is empty")
-	}
-	sk := os.Getenv("sk")
-	config := &openapi.Config{
-		AccessKeyId:     tea.String(ak),
-		AccessKeySecret: tea.String(sk),
-	}
-	config.Endpoint = tea.String("eci.cn-hangzhou.aliyuncs.com")
-	config.RegionId = tea.String("cn-hangzhou")
-	var err error
-	eciClient, err := eci20180808.NewClient(config)
-	if err != nil {
-		log.Fatal().Err(err).Msg("init eci client failed")
-	}
 	for {
-		result, err := eciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
-			RegionId: tea.String("cn-hangzhou"),
-			Status:   tea.String("Failed"),
-		})
+		result, err :=
+			common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+				RegionId: tea.String("cn-hangzhou"),
+				Status:   tea.String("Failed"),
+			})
 		if err != nil {
 			log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
 		}
@@ -167,7 +152,7 @@ func (r *DeleteECICMD) Run() error {
 		log.Info().Strs("ids", ids).Msg("ids")
 
 		for _, id := range ids {
-			_, err := eciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
+			_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
 				ContainerGroupId: tea.String(id),
 				RegionId:         tea.String("cn-hangzhou"),
 			})
@@ -184,31 +169,8 @@ func (r *DeleteECICMD) Run() error {
 type Dev0CMD struct {
 }
 
-func loadENV() {
-	fileENV := "../Docker/.env"
-	if goutils.PathExists(fileENV) {
-		env, err := goutils.ReadText(fileENV)
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to read file")
-		}
-		for _, line := range strings.Split(env, "\n") {
-			if line == "" {
-				continue
-			}
-			parts := strings.Split(line, "=")
-			if len(parts) != 2 {
-				log.Fatal().Msg("invalid .env")
-			}
-			os.Setenv(parts[0], parts[1])
-		}
-	}
-
-}
-
 func (r *Dev0CMD) Run() error {
 	log.Debug().Msg("dev-0")
-
-	loadENV()
 
 	// ak := os.Getenv("ak")
 	// if ak == "" {

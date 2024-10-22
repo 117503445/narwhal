@@ -5,7 +5,10 @@ import (
 	"context"
 	"q/rpc"
 
+	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
+	"os"
+	"strings"
 )
 
 // SendTransactionToNarwhalWorker 向 Narwhal Worker 发送一笔交易
@@ -37,4 +40,24 @@ func SendTransactionToNarwhalWorker(client rpc.TransactionsClient, payload strin
 		log.Fatal().Err(err).Msg("SubmitTransaction")
 	}
 	return err
+}
+
+func LoadENV() {
+	fileENV := "../Docker/.env"
+	if goutils.PathExists(fileENV) {
+		env, err := goutils.ReadText(fileENV)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to read file")
+		}
+		for _, line := range strings.Split(env, "\n") {
+			if line == "" {
+				continue
+			}
+			parts := strings.Split(line, "=")
+			if len(parts) != 2 {
+				log.Fatal().Msg("invalid .env")
+			}
+			os.Setenv(parts[0], parts[1])
+		}
+	}
 }
