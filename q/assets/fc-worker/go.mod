@@ -3,14 +3,12 @@ module fc-worker
 go 1.23.1
 
 require (
-	github.com/117503445/goutils v0.0.0-20241020033334-ec3a6d3da345
+	github.com/117503445/goutils v0.0.0-20241022113537-38bd5e335a7e
 	github.com/rs/zerolog v1.33.0
+	google.golang.org/protobuf v1.34.2
 )
 
-require (
-	github.com/twitchtv/twirp v8.1.3+incompatible // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
-)
+require github.com/twitchtv/twirp v8.1.3+incompatible // indirect
 
 require (
 	github.com/google/uuid v1.6.0 // indirect

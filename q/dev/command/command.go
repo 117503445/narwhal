@@ -94,6 +94,8 @@ func (b *BuildCmd) Run() error {
 		goutils.Exec("docker build -t 117503445/narwhal .", goutils.WithCwd("../"))
 
 		UpdateTemplate()
+
+		goutils.Exec("docker compose up -d", goutils.WithCwd("../"))
 	}()
 
 	// wg.Add(1)
@@ -144,59 +146,63 @@ func (r *DeleteECICMD) Run() error {
 	if err != nil {
 		log.Fatal().Err(err).Msg("init eci client failed")
 	}
-
-	result, err := eciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
-		RegionId: tea.String("cn-hangzhou"),
-		Status:   tea.String("Failed"),
-	})
-	if err != nil {
-		log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
-	}
-	log.Info().Interface("result", result).Int("total", len(result.Body.ContainerGroups)).
-		Msg("DescribeContainerGroupsRequest success")
-
-	ids := make([]string, 0)
-	// result.Body.ContainerGroups
-	for _, containerGroup := range result.Body.ContainerGroups {
-		log.Info().Interface("containerGroup", containerGroup.ContainerGroupId).Msg("containerGroup")
-		ids = append(ids, *containerGroup.ContainerGroupId)
-	}
-
-	log.Info().Strs("ids", ids).Msg("ids")
-
-	for _, id := range ids {
-		_, err := eciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
-			ContainerGroupId: tea.String(id),
-			RegionId:         tea.String("cn-hangzhou"),
+	for {
+		result, err := eciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+			RegionId: tea.String("cn-hangzhou"),
+			Status:   tea.String("Failed"),
 		})
 		if err != nil {
-			log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+			log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
 		}
-		log.Info().Str("id", id).Msg("DeleteContainerGroupRequest success")
-	}
+		log.Info().Interface("result", result).Int("total", len(result.Body.ContainerGroups)).
+			Msg("DescribeContainerGroupsRequest success")
 
-	return nil
+		ids := make([]string, 0)
+		// result.Body.ContainerGroups
+		for _, containerGroup := range result.Body.ContainerGroups {
+			log.Info().Interface("containerGroup", containerGroup.ContainerGroupId).Msg("containerGroup")
+			ids = append(ids, *containerGroup.ContainerGroupId)
+		}
+
+		log.Info().Strs("ids", ids).Msg("ids")
+
+		for _, id := range ids {
+			_, err := eciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
+				ContainerGroupId: tea.String(id),
+				RegionId:         tea.String("cn-hangzhou"),
+			})
+			if err != nil {
+				log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+			}
+			log.Info().Str("id", id).Msg("DeleteContainerGroupRequest success")
+		}
+
+		time.Sleep(time.Second * 10)
+	}
 }
 
 type Dev0CMD struct {
 }
 
 func loadENV() {
-	// 读取 ../Docker/.env
-	env, err := goutils.ReadText("../Docker/.env")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to read file")
-	}
-	for _, line := range strings.Split(env, "\n") {
-		if line == "" {
-			continue
+	fileENV := "../Docker/.env"
+	if goutils.PathExists(fileENV) {
+		env, err := goutils.ReadText(fileENV)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to read file")
 		}
-		parts := strings.Split(line, "=")
-		if len(parts) != 2 {
-			log.Fatal().Msg("invalid .env")
+		for _, line := range strings.Split(env, "\n") {
+			if line == "" {
+				continue
+			}
+			parts := strings.Split(line, "=")
+			if len(parts) != 2 {
+				log.Fatal().Msg("invalid .env")
+			}
+			os.Setenv(parts[0], parts[1])
 		}
-		os.Setenv(parts[0], parts[1])
 	}
+
 }
 
 func (r *Dev0CMD) Run() error {

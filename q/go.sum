@@ -1,6 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-github.com/117503445/goutils v0.0.0-20241020033334-ec3a6d3da345 h1:65Yddxql3BDgWRxVFtfo2jMc9fQ/aD64jPtE4/n8u4w=
-github.com/117503445/goutils v0.0.0-20241020033334-ec3a6d3da345/go.mod h1:3dK+T0WoP9MdQI6VQ25qPeN1qr3JXDooIszXIAH57xQ=
+github.com/117503445/goutils v0.0.0-20241022113537-38bd5e335a7e h1:VwKoeaVqGbCi/PNCOvZ6+AantX5b31XiczZGWRTrBu8=
+github.com/117503445/goutils v0.0.0-20241022113537-38bd5e335a7e/go.mod h1:3dK+T0WoP9MdQI6VQ25qPeN1qr3JXDooIszXIAH57xQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/alecthomas/assert/v2 v2.10.0 h1:jjRCHsj6hBJhkmhznrCzoNpbA3zqy0fYiUcYZP/GkPY=
 github.com/alecthomas/assert/v2 v2.10.0/go.mod h1:Bze95FyfUr7x34QZrjL+XP+0qgp/zg8yS+TtBj1WA3k=
@@ -131,8 +131,6 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rs/xid v1.5.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.33.0 h1:1cU2KZkvPxNyfgEmhHAz/1A9Bz+llsdYzklWFzgp0r8=
 github.com/rs/zerolog v1.33.0/go.mod h1:/7mN4D5sKwJLZQ2b/znpjC3/GQWY/xaDXUM0kKWRHss=
-github.com/simonnilsson/ask v0.4.0 h1:m+IaCOwgvXI1w9+g4PiCmxwBD/nEjd1ycc+oneQLMLU=
-github.com/simonnilsson/ask v0.4.0/go.mod h1:sUb3WVJKlF20TzemrTDTB5b1e2mxYYqluNe75OPa7Tg=
 github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=
 github.com/smartystreets/assertions v1.1.0/go.mod h1:tcbTF8ujkAEcZ8TElKY+i30BzYlVhC/LOxJk7iOWnoo=
 github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
