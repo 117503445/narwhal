@@ -4,6 +4,8 @@ import (
 	// "fmt"
 	"context"
 	"encoding/json"
+	"time"
+
 	// "fmt"
 	"net/http"
 	"os"
@@ -150,6 +152,12 @@ func (s *Server) ReceiveBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*e
 func NewServer() *Server {
 	log.Info().Msg("NewServer")
 	var err error
+
+	go func() {
+		time.Sleep(10 * time.Minute)
+		log.Info().Msg("Timeout")
+		os.Exit(1)
+	}()
 
 	log.Info().Str("urlMapJSON", urlMapJSON).Msg("parse")
 	var urlMap URLMap
