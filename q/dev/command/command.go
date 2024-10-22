@@ -13,6 +13,7 @@ import (
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
 
 	eci20180808 "github.com/alibabacloud-go/eci-20180808/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
@@ -74,6 +75,21 @@ func DeployECI() {
 		ExpId: expID,
 	}
 	var m sync.Mutex
+
+	metas := make([]*ECIMeta, 0)
+
+	NODE_COUNT := 4
+	WORKER_COUNT := 1
+
+	for nodeID := 0; nodeID < NODE_COUNT; nodeID++ {
+		for workerID := 0; workerID < WORKER_COUNT; workerID++ {
+			metas = append(metas, &ECIMeta{
+				ExpID:    expID,
+				NodeID:   nodeID,
+				WorkerID: workerID,
+			})
+		}
+	}
 
 	createContainer := func(meta *ECIMeta) {
 		containerGroupName := fmt.Sprintf("biye-%d-%d-%s", meta.NodeID, meta.WorkerID, expID)
@@ -137,17 +153,6 @@ func DeployECI() {
 
 	}
 
-	metas := make([]*ECIMeta, 0)
-	for nodeID := 0; nodeID < 1; nodeID++ {
-		for workerID := 0; workerID < 1; workerID++ {
-			metas = append(metas, &ECIMeta{
-				ExpID:    expID,
-				NodeID:   nodeID,
-				WorkerID: workerID,
-			})
-		}
-	}
-
 	var wg sync.WaitGroup
 	for _, meta := range metas {
 		wg.Add(1)
@@ -173,6 +178,15 @@ func DeployECI() {
 		}(worker)
 	}
 	wg.Wait()
+
+	// write w to "../Docker/validators/eci.pb"
+	wBytes, err := proto.Marshal(w)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to marshal")
+	}
+	if err := os.WriteFile("../Docker/validators/eci.pb", wBytes, 0666); err != nil {
+		log.Fatal().Err(err).Msg("failed to write file")
+	}
 }
 
 type BuildCmd struct {

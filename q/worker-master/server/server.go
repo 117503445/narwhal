@@ -33,6 +33,8 @@ type Server struct {
 	transactionsClient rpc.TransactionsClient
 
 	fcManager *FcManager
+
+	eciManager *EciManager
 }
 
 func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
@@ -44,10 +46,10 @@ func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.
 func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
 	// common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
 	log.Info().Msg("PutTx")
-	s.fcManager.MustStartInstance(0)
+	// s.fcManager.MustStartInstance(0)
 
 	time.Sleep(1 * time.Second)
-	if _, err := s.fcManager.conns[0].client.PutBatch(context.Background(), &qrpc.PutBatchRequest{
+	if _, err := s.eciManager.clients[0].PutBatch(context.Background(), &qrpc.PutBatchRequest{
 		Payload: in.Payload,
 		Id:      "batch0",
 	}); err != nil {
@@ -106,15 +108,16 @@ func NewServer() *Server {
 		transactionsClient: client,
 		id:                 id,
 		fcManager:          NewFcManager(id),
+		eciManager:         NewEciManager(id),
 	}
 
-	if s.fcManager.IsInstanceRunning(0) {
-		s.fcManager.conns[0].client.Exit(context.Background(), nil)
-		time.Sleep(1 * time.Second)
-		if s.fcManager.IsInstanceRunning(0){
-			log.Fatal().Msg("failed to stop instance")
-		}
-	}
+	// if s.fcManager.IsInstanceRunning(0) {
+	// 	s.fcManager.conns[0].client.Exit(context.Background(), nil)
+	// 	time.Sleep(1 * time.Second)
+	// 	if s.fcManager.IsInstanceRunning(0) {
+	// 		log.Fatal().Msg("failed to stop instance")
+	// 	}
+	// }
 
 	// 测试用
 	go func() {
