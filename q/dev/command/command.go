@@ -2,12 +2,17 @@ package command
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"text/template"
 	"time"
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
+
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	eci20180808 "github.com/alibabacloud-go/eci-20180808/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 )
 
 // UpdateTemplate 更新模板
@@ -117,11 +122,110 @@ func (r *ReqCMD) Run() error {
 	return nil
 }
 
+type DeleteECICMD struct {
+}
+
+func (r *DeleteECICMD) Run() error {
+	loadENV()
+
+	ak := os.Getenv("ak")
+	if ak == "" {
+		log.Fatal().Msg("ak is empty")
+	}
+	sk := os.Getenv("sk")
+	config := &openapi.Config{
+		AccessKeyId:     tea.String(ak),
+		AccessKeySecret: tea.String(sk),
+	}
+	config.Endpoint = tea.String("eci.cn-hangzhou.aliyuncs.com")
+	config.RegionId = tea.String("cn-hangzhou")
+	var err error
+	eciClient, err := eci20180808.NewClient(config)
+	if err != nil {
+		log.Fatal().Err(err).Msg("init eci client failed")
+	}
+
+	result, err := eciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+		RegionId: tea.String("cn-hangzhou"),
+		Status:   tea.String("Failed"),
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
+	}
+	log.Info().Interface("result", result).Int("total", len(result.Body.ContainerGroups)).
+		Msg("DescribeContainerGroupsRequest success")
+
+	ids := make([]string, 0)
+	// result.Body.ContainerGroups
+	for _, containerGroup := range result.Body.ContainerGroups {
+		log.Info().Interface("containerGroup", containerGroup.ContainerGroupId).Msg("containerGroup")
+		ids = append(ids, *containerGroup.ContainerGroupId)
+	}
+
+	log.Info().Strs("ids", ids).Msg("ids")
+
+	for _, id := range ids {
+		_, err := eciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
+			ContainerGroupId: tea.String(id),
+			RegionId:         tea.String("cn-hangzhou"),
+		})
+		if err != nil {
+			log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+		}
+		log.Info().Str("id", id).Msg("DeleteContainerGroupRequest success")
+	}
+
+	return nil
+}
+
 type Dev0CMD struct {
+}
+
+func loadENV() {
+	// 读取 ../Docker/.env
+	env, err := goutils.ReadText("../Docker/.env")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to read file")
+	}
+	for _, line := range strings.Split(env, "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "=")
+		if len(parts) != 2 {
+			log.Fatal().Msg("invalid .env")
+		}
+		os.Setenv(parts[0], parts[1])
+	}
 }
 
 func (r *Dev0CMD) Run() error {
 	log.Debug().Msg("dev-0")
+
+	loadENV()
+
+	// ak := os.Getenv("ak")
+	// if ak == "" {
+	// 	log.Fatal().Msg("ak is empty")
+	// }
+	// sk := os.Getenv("sk")
+	// config := &openapi.Config{
+	// 	AccessKeyId:     tea.String(ak),
+	// 	AccessKeySecret: tea.String(sk),
+	// }
+	// // Endpoint 请参考 https://api.aliyun.com/product/FC
+	// config.Endpoint = tea.String("eci.cn-hangzhou.aliyuncs.com")
+	// var err error
+	// eciClient, err := eci20180808.NewClient(config)
+	// if err != nil {
+	// 	log.Fatal().Err(err).Msg("init eci client failed")
+	// }
+
+	// result, err := eciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{})
+	// if err != nil {
+	// 	log.Fatal().Err(err).Msg("create container group failed")
+	// }
+	// log.Info().Interface("result", result).Msg("create container group success")
 
 	return nil
 }

@@ -25,6 +25,7 @@ var cli struct {
 	Executor          executor.ExecutorCmd                   `cmd:""`
 	WorkerMaster      worker.WorkerCmd                       `cmd:""`
 	SendReq           sendreq.SendReqCmd                     `cmd:"" help:"send a request to the worker"`
+	DeleteECI         dev.DeleteECICMD                       `cmd:""`
 	WorkerSlaveClient workerSlaveClient.WorkerSlaveClientCmd `cmd:""`
 }
 
