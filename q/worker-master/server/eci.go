@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"q/qrpc"
 
@@ -32,8 +33,9 @@ func NewEciManager(masterID int) *EciManager {
 		workerID := int(worker.WorkerIndex)
 
 		if nodeID == masterID {
-			client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), nil)
+			client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
 			clients[workerID] = client
+			log.Info().Int("nodeID", nodeID).Int("workerID", workerID).Msg("add client")
 		}
 
 	}

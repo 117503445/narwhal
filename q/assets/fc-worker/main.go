@@ -195,7 +195,7 @@ func (s *Server) PutBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*empty
 					})
 					if err != nil {
 						log.Warn().Err(err).Msg("failed to call BatchConfirmed")
-						time.Sleep(10 * time.Second)
+						time.Sleep(30 * time.Second)
 						_, err = s.masterClient.BatchConfirmed(context.Background(), &qrpc.BatchMeta{
 							Id: id,
 						})

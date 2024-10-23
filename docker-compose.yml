@@ -39,14 +39,14 @@ services:
     stdin_open: true
     tty: true
     init: true
-  esi-del:
-    image: 117503445/narwhal
-    env_file:
-      - ./Docker/.env
-    stdin_open: true
-    tty: true
-    init: true
-    entrypoint: ./bin/q delete-eci
+  # esi-del:
+  #   image: 117503445/narwhal
+  #   env_file:
+  #     - ./Docker/.env
+  #   stdin_open: true
+  #   tty: true
+  #   init: true
+  #   entrypoint: ./bin/q delete-eci
 
 
 volumes:

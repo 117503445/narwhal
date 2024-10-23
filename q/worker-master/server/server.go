@@ -70,9 +70,14 @@ func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empt
 	// common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
 	log.Info().Msg("PutTx")
 	// s.fcManager.MustStartInstance(0)
+	// time.Sleep(1 * time.Second)
 
-	time.Sleep(1 * time.Second)
-	if _, err := s.eciManager.clients[0].PutBatch(context.Background(), &qrpc.PutBatchRequest{
+	client := s.eciManager.clients[0]
+	if client == nil{
+		log.Fatal().Msg("client is nil")
+	}
+
+	if _, err := client.PutBatch(context.Background(), &qrpc.PutBatchRequest{
 		Payload: in.Payload,
 		Id:      "batch0",
 	}); err != nil {
@@ -146,7 +151,9 @@ func NewServer() *Server {
 	// 测试用
 	go func() {
 		time.Sleep(1 * time.Second)
-		s.PutTx(context.Background(), &rpc.QTransaction{})
+		s.PutTx(context.Background(), &rpc.QTransaction{
+			Payload: "test-payload",
+		})
 	}()
 
 	return s
