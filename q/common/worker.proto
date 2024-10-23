@@ -34,6 +34,9 @@ message WorkersNetInfo {
   string exp_id = 1;
   repeated WorkerNetInfo workers = 2;
   string proxy = 3;
+  string master_url = 4;
+  int64 master_id = 5;
+  int64 slave_id = 6;
 }
 
 message WorkerNetInfo {

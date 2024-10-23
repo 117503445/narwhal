@@ -10,6 +10,7 @@ import (
 	// "fmt"
 	"net/http"
 	"os"
+
 	// "strconv"
 	"sync"
 
@@ -17,7 +18,10 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"q/qrpc"
+	"q/rpc"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	_ "embed"
@@ -33,7 +37,8 @@ type URLMap struct {
 type Server struct {
 	qrpc.WorkerSlave
 
-	id int
+	masterId int
+	slaveId  int
 
 	quit chan struct{}
 
@@ -42,6 +47,8 @@ type Server struct {
 	clients map[int]map[int]qrpc.WorkerSlave
 
 	batchStatus map[string]map[int]bool // batchID -> NodeID -> status
+
+	masterClient rpc.QWorkerMasterClient
 
 	sync.Mutex
 }
@@ -65,14 +72,30 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 		time.Sleep(10 * time.Second)
 		log.Info().Msg("PutBatch")
 		_, err := s.PutBatch(context.Background(), &qrpc.PutBatchRequest{
-			Id:      fmt.Sprintf("from %d", s.id),
-			Payload: fmt.Sprintf("from %d", s.id),
+			Id:      fmt.Sprintf("from %d", s.slaveId),
+			Payload: fmt.Sprintf("from %d", s.slaveId),
 		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("PutBatch failed")
 		}
 		log.Info().Msg("PutBatch done")
 	}()
+
+	s.masterId = int(in.MasterId)
+	s.slaveId = int(in.SlaveId)
+
+	if err := os.Setenv("HTTPS_PROXY", in.Proxy); err != nil {
+		log.Fatal().Err(err).Msg("failed to set HTTPS_PROXY")
+	}
+	creds := insecure.NewCredentials()
+	conn, err := grpc.NewClient(in.MasterUrl, grpc.WithTransportCredentials(creds))
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to dial")
+	}
+
+	s.masterClient = rpc.NewQWorkerMasterClient(conn)
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -120,7 +143,7 @@ func (s *Server) PutBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*empty
 		for i := range s.clients {
 			s.batchStatus[in.Id][i] = false
 		}
-		s.batchStatus[in.Id][s.id] = true
+		s.batchStatus[in.Id][s.slaveId] = true
 	}
 	s.Unlock()
 
@@ -133,7 +156,7 @@ func (s *Server) PutBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*empty
 		wg.Add(1)
 		go func(i int, client qrpc.WorkerSlave) {
 			defer wg.Done()
-			if i == s.id {
+			if i == s.slaveId {
 				return
 			}
 			log.Info().Str("batchID", in.Id).Int("nodeID", i).Msg("Call ReceiveBatch")

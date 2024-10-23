@@ -75,15 +75,25 @@ func init() {
 }
 
 func DeployECI() {
+	httpProxy := os.Getenv("http_proxy")
+	masterIp := os.Getenv("master_ip")
+
+	NODE_COUNT := 4
+	WORKER_COUNT := 1
+
+	// mastersUrl := make([]string, 0)
+	// for i := 0; i < NODE_COUNT; i++ {
+	// 	mastersUrl = append(mastersUrl, fmt.Sprintf("http://%v:2312%d", masterIp, i))
+	// }
+
 	w := &qrpc.WorkersNetInfo{
-		ExpId: expID,
+		ExpId:      expID,
+		Proxy:      httpProxy,
+		// MastersUrl: mastersUrl,
 	}
 	var m sync.Mutex
 
 	metas := make([]*ECIMeta, 0)
-
-	NODE_COUNT := 4
-	WORKER_COUNT := 1
 
 	for nodeID := 0; nodeID < NODE_COUNT; nodeID++ {
 		for workerID := 0; workerID < WORKER_COUNT; workerID++ {
@@ -176,11 +186,20 @@ func DeployECI() {
 	for _, worker := range w.Workers {
 		wg.Add(1)
 		go func(worker *qrpc.WorkerNetInfo) {
+
 			defer wg.Done()
 			client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
 
 			for {
-				resp, err := client.PutWorkersNetInfo(context.TODO(), w)
+				resp, err := client.PutWorkersNetInfo(context.TODO(), &qrpc.WorkersNetInfo{
+					ExpId:   w.ExpId,
+					Workers: w.Workers,
+					Proxy:   w.Proxy,
+
+					MasterUrl: fmt.Sprintf("%v:2312%d", masterIp, worker.NodeIndex),
+					MasterId:  int64(worker.NodeIndex),
+					SlaveId:   int64(worker.WorkerIndex),
+				})
 				if err != nil {
 					log.Warn().Err(err).Msg("failed to call PutWorkersNetInfo")
 					time.Sleep(time.Second * 3)
@@ -223,7 +242,6 @@ func (b *BuildCmd) Run() error {
 		goutils.Exec("docker compose exec -T builder cargo build --target-dir docker-target --bin node --bin benchmark_client", goutils.WithCwd("../"))
 
 		goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
-
 
 		goutils.Exec(fmt.Sprintf("docker build -t registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v .", expID), goutils.WithCwd("./assets/fc-worker"))
 

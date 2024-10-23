@@ -59,6 +59,12 @@ func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empt
 	return &emptypb.Empty{}, nil
 }
 
+// BatchConfirmed
+func (s *Server) BatchConfirmed(ctx context.Context, in *rpc.BatchMeta) (*emptypb.Empty, error) {
+	log.Info().Str("id", in.Id).Msg("BatchConfirmed")
+	return &emptypb.Empty{}, nil
+}
+
 func (s *Server) Run() {
 
 	// s.checkPointStore = store.NewCheckPointStore()
