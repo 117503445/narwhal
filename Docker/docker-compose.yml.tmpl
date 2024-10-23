@@ -73,6 +73,7 @@ services:
     #   - "4002" # Port to listen on messages from other worker nodes
     ports:
       - "2312{{$i}}:50051" # expose the port for the worker to accept transactions from clients
+      - "2412{{$i}}:9000" # expose the port for the worker to accept transactions from clients
     volumes:
       - ./validators:/validators
       - ./validators/validator-{{$i}}/logs:/home/logs

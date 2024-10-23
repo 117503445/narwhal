@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	// "fmt"
@@ -23,6 +24,26 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+type qServer struct {
+	qrpc.WorkerMaster
+}
+
+func (s *qServer) BatchConfirmed(ctx context.Context, in *qrpc.BatchMeta) (*emptypb.Empty, error) {
+	log.Info().Str("id", in.Id).Msg("BatchConfirmed")
+	return &emptypb.Empty{}, nil
+}
+
+func NewQServer() *qServer {
+	return &qServer{}
+}
+
+func (s *qServer) Run() {
+	twirpHandler := qrpc.NewWorkerMasterServer(s)
+
+	http.Handle("/", twirpHandler)
+	http.ListenAndServe(":9000", nil)
+}
+
 type Server struct {
 	rpc.UnimplementedQWorkerMasterServer
 
@@ -35,6 +56,8 @@ type Server struct {
 	fcManager *FcManager
 
 	eciManager *EciManager
+
+	qServer *qServer
 }
 
 func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
@@ -59,13 +82,8 @@ func (s *Server) PutTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empt
 	return &emptypb.Empty{}, nil
 }
 
-// BatchConfirmed
-func (s *Server) BatchConfirmed(ctx context.Context, in *rpc.BatchMeta) (*emptypb.Empty, error) {
-	log.Info().Str("id", in.Id).Msg("BatchConfirmed")
-	return &emptypb.Empty{}, nil
-}
-
 func (s *Server) Run() {
+	go s.qServer.Run()
 
 	// s.checkPointStore = store.NewCheckPointStore()
 

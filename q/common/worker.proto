@@ -21,6 +21,10 @@ service WorkerSlave {
   rpc PutWorkersNetInfo(WorkersNetInfo) returns (google.protobuf.Empty);
 }
 
+service WorkerMaster {
+  rpc BatchConfirmed(BatchMeta) returns (google.protobuf.Empty); // the digest of batch is confirmed
+}
+
 message StartResponse {
     string msg = 1;
 }
@@ -45,4 +49,7 @@ message WorkerNetInfo {
   int64 workerIndex = 3; // 0 for worker0
   string internet_ip = 4;
   string intranet_ip = 5;
+}
+message BatchMeta{
+  string id = 1;
 }

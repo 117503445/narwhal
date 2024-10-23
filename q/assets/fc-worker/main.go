@@ -9,6 +9,7 @@ import (
 
 	// "fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	// "strconv"
@@ -18,10 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"q/qrpc"
-	"q/rpc"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	_ "embed"
@@ -48,7 +46,7 @@ type Server struct {
 
 	batchStatus map[string]map[int]bool // batchID -> NodeID -> status
 
-	masterClient rpc.QWorkerMasterClient
+	masterClient qrpc.WorkerMaster
 
 	sync.Mutex
 }
@@ -84,17 +82,32 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 	s.masterId = int(in.MasterId)
 	s.slaveId = int(in.SlaveId)
 
-	if err := os.Setenv("HTTPS_PROXY", in.Proxy); err != nil {
-		log.Fatal().Err(err).Msg("failed to set HTTPS_PROXY")
-	}
-	creds := insecure.NewCredentials()
-	conn, err := grpc.NewClient(in.MasterUrl, grpc.WithTransportCredentials(creds))
+	// if err := os.Setenv("HTTPS_PROXY", in.Proxy); err != nil {
+	// 	log.Fatal().Err(err).Msg("failed to set HTTPS_PROXY")
+	// }
+	// log.Info().Str("proxy", in.Proxy).Msg("set HTTPS_PROXY")
+	// creds := insecure.NewCredentials()
+	// conn, err := grpc.NewClient(in.MasterUrl, grpc.WithTransportCredentials(creds))
 
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to dial")
+	// if err != nil {
+	// 	log.Fatal().Err(err).Msg("failed to dial")
+	// }
+
+	log.Info().Str("masterUrl", in.MasterUrl).Msg("NewWorkerMasterProtobufClient")
+
+	httpClient := &http.Client{}
+	// proxy
+	if in.Proxy != "" {
+		proxyUrl, err := url.Parse(in.Proxy)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to parse proxy")
+		}
+		httpClient.Transport = &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
 	}
 
-	s.masterClient = rpc.NewQWorkerMasterClient(conn)
+	s.masterClient = qrpc.NewWorkerMasterProtobufClient(in.MasterUrl, httpClient)
 
 	return &emptypb.Empty{}, nil
 }
@@ -176,6 +189,21 @@ func (s *Server) PutBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*empty
 			}
 			if count == 3 {
 				log.Info().Str("batchID", in.Id).Msg("Quorum nodes received")
+				go func(id string) {
+					_, err := s.masterClient.BatchConfirmed(context.Background(), &qrpc.BatchMeta{
+						Id: id,
+					})
+					if err != nil {
+						log.Warn().Err(err).Msg("failed to call BatchConfirmed")
+						time.Sleep(10 * time.Second)
+						_, err = s.masterClient.BatchConfirmed(context.Background(), &qrpc.BatchMeta{
+							Id: id,
+						})
+						if err != nil {
+							log.Fatal().Err(err).Msg("failed to call BatchConfirmed")
+						}
+					}
+				}(in.Id)
 			}
 			s.Unlock()
 		}(i, client)

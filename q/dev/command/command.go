@@ -196,7 +196,7 @@ func DeployECI() {
 					Workers: w.Workers,
 					Proxy:   w.Proxy,
 
-					MasterUrl: fmt.Sprintf("%v:2312%d", masterIp, worker.NodeIndex),
+					MasterUrl: fmt.Sprintf("http://%v:2412%d", masterIp, worker.NodeIndex),
 					MasterId:  int64(worker.NodeIndex),
 					SlaveId:   int64(worker.WorkerIndex),
 				})
