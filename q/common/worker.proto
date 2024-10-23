@@ -33,6 +33,7 @@ message PutBatchRequest {
 message WorkersNetInfo {
   string exp_id = 1;
   repeated WorkerNetInfo workers = 2;
+  string proxy = 3;
 }
 
 message WorkerNetInfo {

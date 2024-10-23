@@ -244,8 +244,14 @@ service QWorkerMaster{
     rpc PutTestTx(QTransaction) returns (google.protobuf.Empty);
 
     rpc PutTx(QTransaction) returns (google.protobuf.Empty);
+
+    rpc BatchConfirmed(BatchMeta) returns (google.protobuf.Empty); // the digest of batch is confirmed
 }
 
 message QTransaction {
     string payload = 1;
+}
+
+message BatchMeta{
+    string id = 1;
 }
