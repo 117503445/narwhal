@@ -3,7 +3,7 @@ module fc-worker
 go 1.23.1
 
 require (
-	github.com/117503445/goutils v0.0.0-20241022113537-38bd5e335a7e
+	github.com/117503445/goutils v0.0.0-20241023113855-7542b5286948
 	github.com/rs/zerolog v1.33.0
 	google.golang.org/protobuf v1.34.2
 )
