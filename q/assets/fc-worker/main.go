@@ -231,6 +231,8 @@ func (s *Server) ReceiveBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*e
 	return &emptypb.Empty{}, nil
 }
 
+
+
 func NewServer() *Server {
 	log.Info().Msg("NewServer")
 	var err error

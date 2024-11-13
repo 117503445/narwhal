@@ -16,3 +16,7 @@ tasks:
     dir: q
     cmds:
       - go run . --help
+  proto:
+    desc: "Generate the proto files"
+    cmds:
+      - docker compose exec -T q-dev /workspace/q/script/proto.sh

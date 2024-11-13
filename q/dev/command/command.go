@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"q/common"
-	"q/qrpc"
 	"sync"
 	"text/template"
 	"time"
 
 	"github.com/117503445/goutils"
+	eci20180808 "github.com/alibabacloud-go/eci-20180808/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 
-	eci20180808 "github.com/alibabacloud-go/eci-20180808/v3/client"
-	"github.com/alibabacloud-go/tea/tea"
+	"q/common"
+	"q/qrpc"
 )
 
 // UpdateTemplate 更新模板
@@ -74,12 +74,20 @@ func init() {
 	expID = goutils.TimeStrSec()
 }
 
-func DeployECI() {
+func DeployECI(
+	nodeCount int, workerCount int,
+) *qrpc.WorkersNetInfo {
 	httpProxy := os.Getenv("http_proxy")
 	masterIp := os.Getenv("master_ip")
 
 	NODE_COUNT := 4
+	if nodeCount > 0 {
+		NODE_COUNT = nodeCount
+	}
 	WORKER_COUNT := 1
+	if workerCount > 0 {
+		WORKER_COUNT = workerCount
+	}
 
 	// mastersUrl := make([]string, 0)
 	// for i := 0; i < NODE_COUNT; i++ {
@@ -87,8 +95,8 @@ func DeployECI() {
 	// }
 
 	w := &qrpc.WorkersNetInfo{
-		ExpId:      expID,
-		Proxy:      httpProxy,
+		ExpId: expID,
+		Proxy: httpProxy,
 		// MastersUrl: mastersUrl,
 	}
 	var m sync.Mutex
@@ -220,6 +228,8 @@ func DeployECI() {
 	if err := os.WriteFile("../Docker/validators/eci.pb", wBytes, 0666); err != nil {
 		log.Fatal().Err(err).Msg("failed to write file")
 	}
+
+	return w
 }
 
 type BuildCmd struct {
@@ -247,7 +257,7 @@ func (b *BuildCmd) Run() error {
 
 		goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-		DeployECI()
+		DeployECI(4, 1)
 
 		// registry-vpc.cn-hangzhou.aliyuncs.com/117503445/biye-slave
 

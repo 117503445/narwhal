@@ -19,10 +19,19 @@ service WorkerSlave {
   rpc ReceiveBatch(PutBatchRequest) returns (google.protobuf.Empty);
 
   rpc PutWorkersNetInfo(WorkersNetInfo) returns (google.protobuf.Empty);
+
+  rpc OssCase0Start(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  rpc OssCase0SendBatch(OssCase0Batch) returns (google.protobuf.Empty);
 }
 
 service WorkerMaster {
   rpc BatchConfirmed(BatchMeta) returns (google.protobuf.Empty); // the digest of batch is confirmed
+}
+
+message OssCase0Batch {
+  string id = 1;
+  bytes payload = 2;
 }
 
 message StartResponse {
