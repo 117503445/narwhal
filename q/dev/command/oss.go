@@ -52,7 +52,7 @@ func (c *Oss0CaseCMD) Run() error {
 		}
 		log.Info().Str("metrics",
 			protojson.Format(metrics)).Msg("OssCase0GetMetrics")
-
+		// log.Info().Str("metrics",protojson.Format(metrics)).Msg("OssCase0GetMetrics")
 		if len(metrics.Batches) <= 1 {
 			time.Sleep(time.Second * 3)
 			continue
