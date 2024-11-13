@@ -27,11 +27,15 @@ func (c *Oss0CaseCMD) Run() error {
 
 	w := DeployECI(2, 1)
 	log.Info().Interface("w", w).Msg("DeployECI")
-	c1 := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.Workers[0].InternetIp), &http.Client{})
+
+	internetIp := w.Workers[0].InternetIp
+
+	c1 := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", internetIp), &http.Client{})
 	_, err = c1.OssCase0Start(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to call OssCase0Start")
 	}
+	log.Info().Str("internetIp", internetIp).Msg("OssCase0Start")
 
 	return nil
 }
