@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  default:
+    desc: "The default task"
+    dir: q
+    cmds:
+      - go run . build
