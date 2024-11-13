@@ -13,7 +13,10 @@
         "--message-format=json",
         "--all-targets",
     ],
-    "rust-analyzer.cargo.sysroot": "discover"
+    "rust-analyzer.cargo.sysroot": "discover",
+    "task": {
+        "path": "go-task"
+    },
 }
 // cargo check --workspace --message-format=json --all-targets
 // cargo check --message-format=json --workspace --all-targets

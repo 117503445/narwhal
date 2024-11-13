@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/117503445/goutils"
-	"github.com/alecthomas/kong"
 	dev "q/dev/command"
 	executor "q/executor/command"
 	sendreq "q/sendreq/command"
 	worker "q/worker-master/command"
 	workerSlaveClient "q/worker-slave-client/command"
+
+	"github.com/117503445/goutils"
+	"github.com/alecthomas/kong"
 )
 
 type DefaultCmd struct {
@@ -27,6 +28,7 @@ var cli struct {
 	SendReq           sendreq.SendReqCmd                     `cmd:"" help:"send a request to the worker"`
 	DeleteECI         dev.DeleteECICMD                       `cmd:""`
 	WorkerSlaveClient workerSlaveClient.WorkerSlaveClientCmd `cmd:""`
+	OssCase0              dev.Oss0CaseCMD                        `cmd:""`
 }
 
 func main() {

@@ -6,3 +6,13 @@ tasks:
     dir: q
     cmds:
       - go run . build
+  oss-case-0:
+    desc: "2 个 ECI 之间的内网通信"
+    dir: q
+    cmds:
+      - go run . oss-case-0
+  q:
+    desc: "Run the q command help"
+    dir: q
+    cmds:
+      - go run . --help
