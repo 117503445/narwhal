@@ -42,7 +42,7 @@ type Server struct {
 
 	started bool // start should be called only once
 
-	clients map[int]map[int]qrpc.WorkerSlave
+	clients map[int]map[int]qrpc.WorkerSlave // nodeID -> WorkerID -> client
 
 	batchStatus map[string]map[int]bool // batchID -> NodeID -> status
 

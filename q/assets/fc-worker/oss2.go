@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"q/qrpc"
 
@@ -30,55 +31,56 @@ func (s *Server) OssCase2Start(ctx context.Context, req *qrpc.OssCase1StartReque
 
 		OssClient = oss.NewClient(cfg)
 
-		
+		time.Sleep(10 * time.Second)
+
 		for i := 0; i < 100; i++ {
+			log.Debug().Int("i", i).Msg("Sending Batch")
 			// go func(i int) {
-				// 10MB
-				payload := make([]byte, 1024*1024*10)
-				_, err := OssClient.PutObject(context.TODO(), &oss.PutObjectRequest{
-					Bucket: oss.Ptr("biye1024"),
-					Key:    oss.Ptr(fmt.Sprintf("test-block-%d-%d", s.masterId, i)),
-					Body:   bytes.NewReader(payload),
-				})
-				if err != nil {
-					log.Fatal().Err(err).Msg("failed to call PutObject")
-					return
+			// 10MB
+			payload := make([]byte, 1024*1024*10)
+			_, err := OssClient.PutObject(context.TODO(), &oss.PutObjectRequest{
+				Bucket: oss.Ptr("biye1024"),
+				Key:    oss.Ptr(fmt.Sprintf("test-block-%d-%d", s.masterId, i)),
+				Body:   bytes.NewReader(payload),
+			})
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to call PutObject")
+				return
+			}
+
+			blockID := fmt.Sprintf("test-block-%d-%d", s.masterId, i)
+			log.Info().Str("blockID", blockID).Msg("Sending Batch")
+
+			var wg sync.WaitGroup
+			for master, cs := range s.clients {
+				if master == s.masterId {
+					continue
 				}
+				c := cs[0]
+				wg.Add(1)
+				go func(c qrpc.WorkerSlave) {
+					defer wg.Done()
 
-				blockID := fmt.Sprintf("test-block-%d-%d", s.masterId, i)
-				log.Info().Str("blockID", blockID).Msg("Sending Batch")
-
-				var wg sync.WaitGroup
-				for master, cs := range s.clients {
-					if master == s.masterId {
-						continue
+					_, err := c.OssCase2SendBatch(context.TODO(), &qrpc.OssCase2Batch{
+						Url: fmt.Sprintf("test-block-%d-%d", s.masterId, i),
+						Id:  blockID,
+					})
+					if err != nil {
+						log.Fatal().Err(err).Msg("failed to call OssCase2SendBatch")
 					}
-					c := cs[0]
-					wg.Add(1)
-					go func(c qrpc.WorkerSlave) {
-						defer wg.Done()
+					log.Info().Str("blockID", blockID).Int("master", master).Msg("Sent Batch")
+				}(c)
+			}
+			wg.Wait()
+			log.Info().Str("blockID", blockID).Msg("Sent Batch done")
 
-						_, err := c.OssCase2SendBatch(context.TODO(), &qrpc.OssCase2Batch{
-							Url: fmt.Sprintf("test-block-%d-%d", s.masterId, i),
-							Id: blockID,
-						})
-						if err != nil {
-							log.Fatal().Err(err).Msg("failed to call OssCase2SendBatch")
-						}
-						log.Info().Str("blockID", blockID).Int("master", master).Msg("Sent Batch")
-					}(c)
-				}
-
-				wg.Wait()
-				log.Info().Str("blockID", blockID).Msg("Sent Batch done")
-
-				ossCase2metricsLock.Lock()
-				log.Info().Msg("Add Batch")
-				ossCase2metrics.Batches = append(ossCase2metrics.Batches, &qrpc.OssCaseBatchMeta{
-					ReceivedAt: timestamppb.Now(),
-					Size:       1024 * 1024 * 10,
-				})
-				ossCase2metricsLock.Unlock()
+			ossCase2metricsLock.Lock()
+			log.Info().Msg("Add Batch")
+			ossCase2metrics.Batches = append(ossCase2metrics.Batches, &qrpc.OssCaseBatchMeta{
+				ReceivedAt: timestamppb.Now(),
+				Size:       1024 * 1024 * 10,
+			})
+			ossCase2metricsLock.Unlock()
 
 			// }(i)
 		}
@@ -101,17 +103,20 @@ func (s *Server) OssCase2GetMetrics(context.Context, *emptypb.Empty) (*qrpc.OssC
 }
 
 // OssCase2SendBatch(context.Context, *OssCase2Batch) (*google_protobuf.Empty, error)
-func (s *Server) OssCase2SendBatch(ctx context.Context, req *qrpc.OssCase2Batch) (*emptypb.Empty, error) {
-	log.Info().Msg("OssCase2SendBatch")
+func (s *Server) OssCase2SendBatch(_ context.Context, req *qrpc.OssCase2Batch) (*emptypb.Empty, error) {
+	log.Info().Str("blockID", req.Id).Str("url", req.Url).Msg("OssCase2SendBatch")
 
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	_, err := OssClient.GetObject(context.TODO(), &oss.GetObjectRequest{
+	_, err := OssClient.GetObject(ctx, &oss.GetObjectRequest{
 		Bucket: oss.Ptr("biye1024"),
 		Key:    oss.Ptr(req.Url),
 	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to call GetObject")
+		log.Error().Err(err).Msg("failed to call GetObject")
 	}
+
+	log.Info().Str("blockID", req.Id).Msg("OssCase2SendBatch Done")
 
 	return &emptypb.Empty{}, nil
 }
