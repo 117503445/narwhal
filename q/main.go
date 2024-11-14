@@ -28,7 +28,8 @@ var cli struct {
 	SendReq           sendreq.SendReqCmd                     `cmd:"" help:"send a request to the worker"`
 	DeleteECI         dev.DeleteECICMD                       `cmd:""`
 	WorkerSlaveClient workerSlaveClient.WorkerSlaveClientCmd `cmd:""`
-	OssCase0              dev.Oss0CaseCMD                        `cmd:""`
+	OssCase0          dev.Oss0CaseCMD                        `cmd:""`
+	OssCase1          dev.Oss1CaseCMD                        `cmd:""`
 }
 
 func main() {

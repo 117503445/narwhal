@@ -25,6 +25,10 @@ service WorkerSlave {
   rpc OssCase0SendBatch(OssCase0Batch) returns (google.protobuf.Empty);
 
   rpc OssCase0GetMetrics(google.protobuf.Empty) returns (OssCase0Metrics);
+
+  rpc OssCase1Start(OssCase1StartRequest) returns (google.protobuf.Empty);
+
+  rpc OssCase1GetMetrics(google.protobuf.Empty) returns (OssCase1Metrics);
 }
 
 service WorkerMaster {
@@ -35,14 +39,26 @@ message OssCase0Batch {
   string id = 1;
   bytes payload = 2;
 }
+
 import "google/protobuf/timestamp.proto";
 message OssCase0Metrics {
-  repeated OssCase0BatchMeta Batches = 1;
+  repeated OssCaseBatchMeta Batches = 1;
 }
 
-message OssCase0BatchMeta {
+message OssCaseBatchMeta {
   google.protobuf.Timestamp ReceivedAt = 1;
   int64 Size = 2;
+}
+
+message OssCase1StartRequest{
+  string ak = 1;
+  string sk = 2;
+}
+
+message OssCase1Metrics {
+  int64 UploadDurMs = 1;
+  repeated OssCaseBatchMeta Downloads = 2;
+  repeated OssCaseBatchMeta Uploads = 3;
 }
 
 
