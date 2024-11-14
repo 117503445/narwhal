@@ -16,6 +16,11 @@ tasks:
     dir: q
     cmds:
       - go run . oss-case-1
+  oss-case-2:
+    desc: "4 个 ECI 基于 OSS 进行共识"
+    dir: q
+    cmds:
+      - go run . oss-case-2
   q:
     desc: "Run the q command help"
     dir: q

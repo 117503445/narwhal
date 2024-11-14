@@ -30,6 +30,7 @@ var cli struct {
 	WorkerSlaveClient workerSlaveClient.WorkerSlaveClientCmd `cmd:""`
 	OssCase0          dev.Oss0CaseCMD                        `cmd:""`
 	OssCase1          dev.Oss1CaseCMD                        `cmd:""`
+	OssCase2          dev.Oss2CaseCMD                        `cmd:""`
 }
 
 func main() {
