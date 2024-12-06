@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/shirou/gopsutil/v4/cpu"
 	"time"
 
 	// "fmt"
@@ -231,8 +232,6 @@ func (s *Server) ReceiveBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*e
 	return &emptypb.Empty{}, nil
 }
 
-
-
 func NewServer() *Server {
 	log.Info().Msg("NewServer")
 	var err error
@@ -281,6 +280,12 @@ func NewServer() *Server {
 func main() {
 	goutils.InitZeroLog(goutils.WithNoColor{})
 
+	cpuInfo, err := cpu.Info()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to get cpu info")
+	}
+	log.Info().Interface("cpuInfo", cpuInfo).Msg("cpu info")
+
 	log.Info().Msg("Starting server...")
 
 	rpcServer := NewServer()
@@ -289,3 +294,28 @@ func main() {
 	http.Handle("/", twirpHandler)
 	http.ListenAndServe(":9000", nil)
 }
+
+// func getCpuFrequencies() (map[int]float64, error) {
+// 	files, err := os.ReadDir("/sys/devices/system/cpu/")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	cpuFreqs := make(map[int]float64)
+// 	for _, file := range files {
+// 		if strings.HasPrefix(file.Name(), "cpu") {
+// 			cpuIDStr := strings.TrimPrefix(file.Name(), "cpu")
+// 			cpuID, err := strconv.Atoi(cpuIDStr)
+// 			if err != nil || cpuID < 0 {
+// 				continue // Skip non-integer or negative CPU IDs
+// 			}
+// 			freqPath := fmt.Sprintf("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", cpuID)
+// 			data, err := ioutil.ReadFile(freqPath)
+// 			if err == nil {
+// 				freq, _ := strconv.ParseFloat(strings.TrimSpace(string(data)), 64)
+// 				cpuFreqs[cpuID] = freq / 1000.0 // Convert to MHz
+// 			}
+// 		}
+// 	}
+// 	return cpuFreqs, nil
+// }
