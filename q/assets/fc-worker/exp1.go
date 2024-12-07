@@ -7,6 +7,7 @@ import (
 
 	"q/qrpc"
 
+	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -26,35 +27,73 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 	log.Info().Msg("Exp1BoradcastStart")
 
 	go func() {
-		var client qrpc.WorkerSlave
+		var otherClients []qrpc.WorkerSlave
 		var err error
 		for nodeID, clients := range s.clients {
 			if nodeID == s.masterId {
 				continue
 			}
-			client = clients[0]
-		}
-
-		for {
-			start := time.Now()
-			// 512KB
-			payload := make([]byte, 512*1024)
-			_, err = client.Exp1BoradcastRecvBatch(context.Background(), &qrpc.ExpBatch{
-				Payload: payload,
-				TxNum:   1000,
-			})
-
-			if err != nil {
-				log.Error().Err(err).Msg("Exp1BoradcastRecvBatch")
+			for _, c := range clients {
+				otherClients = append(otherClients, c)
 			}
-			log.Info().Msg("Send Exp1BoradcastRecvBatch")
-			latency := time.Since(start).Milliseconds()
-			AddExp1Latency(latency)
-			AddExp1BatchMeta(&qrpc.ExpBatchMeta{
-				SubmittedAt: timestamppb.Now(),
-				TxNum:       1000,
-			})
 		}
+
+		go func() {
+			// produce batch
+			for {
+				start := time.Now()
+				id := goutils.UUID4()
+				batchesChan <- id
+
+				SetBatchCreated(id)
+
+				// press: 每秒钟的预期 tps
+				// 预期每个批次耗费的毫秒数
+				msPerBatch := int(1000 * 1000 / req.Press)
+
+				remain := msPerBatch - int(time.Since(start).Milliseconds())
+
+				log.Info().Int("remain", remain).Str("batchID", id).Msg("produce batch")
+
+				if remain > 0 {
+					time.Sleep(time.Duration(remain) * time.Millisecond)
+				} else {
+					log.Warn().Int("remain", remain).Msg("Exp1BoradcastStart: batch is too slow")
+				}
+			}
+		}()
+
+		const PROCESS_NUM = 3
+		for i := 0; i < PROCESS_NUM; i++ {
+			go func(pid int) {
+				for batchID := range batchesChan {
+					log.Info().Str("batchID", batchID).Int("pid", pid).Msg("sending batch")
+					// 512KB
+					payload := make([]byte, 512*1024)
+
+					for _, otherClient := range otherClients {
+						_, err = otherClient.Exp1BoradcastRecvBatch(context.Background(), &qrpc.ExpBatch{
+							Id:      batchID,
+							Payload: payload,
+							TxNum:   1000,
+						})
+
+						if err != nil {
+							log.Error().Err(err).Msg("Exp1BoradcastRecvBatch")
+						}
+						log.Info().Msg("Send Exp1BoradcastRecvBatch")
+					}
+					latency := GetBatchLatency(batchID).Milliseconds()
+					AddExp1Latency(latency)
+
+					AddExp1BatchMeta(&qrpc.ExpBatchMeta{
+						SubmittedAt: timestamppb.Now(),
+						TxNum:       1000,
+					})
+				}
+			}(i)
+		}
+
 	}()
 
 	return &emptypb.Empty{}, nil
@@ -83,6 +122,11 @@ func (s *Server) Exp1GetMetrics(ctx context.Context, req *emptypb.Empty) (*qrpc.
 var exp1Metrics = &qrpc.Exp1Metrics{}
 var exp1MetricsLock sync.Mutex
 
+var exp1BatchCreated map[string]time.Time = make(map[string]time.Time, 0)
+var exp1BatchCreatedLock sync.Mutex
+
+var batchesChan = make(chan string, 1000)
+
 func GetExp1Metrics() *qrpc.Exp1Metrics {
 	exp1MetricsLock.Lock()
 	defer exp1MetricsLock.Unlock()
@@ -99,4 +143,17 @@ func AddExp1Latency(latency int64) {
 	exp1MetricsLock.Lock()
 	defer exp1MetricsLock.Unlock()
 	exp1Metrics.LatenciesMS = append(exp1Metrics.LatenciesMS, latency)
+}
+
+func SetBatchCreated(id string) {
+	exp1BatchCreatedLock.Lock()
+	defer exp1BatchCreatedLock.Unlock()
+	exp1BatchCreated[id] = time.Now()
+}
+
+func GetBatchLatency(id string) time.Duration {
+	exp1BatchCreatedLock.Lock()
+	defer exp1BatchCreatedLock.Unlock()
+	start := exp1BatchCreated[id]
+	return time.Since(start)
 }

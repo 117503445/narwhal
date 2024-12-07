@@ -40,8 +40,9 @@ func (cmd *Exp1CaseCMD) Run() error {
 	}
 
 	_, err = clients[0].Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
-		Ak: os.Getenv("ak"),
-		Sk: os.Getenv("sk"),
+		Ak:    os.Getenv("ak"),
+		Sk:    os.Getenv("sk"),
+		Press: 1000,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to call Exp1BoradcastStart")
@@ -67,10 +68,6 @@ func (cmd *Exp1CaseCMD) Run() error {
 	return err
 }
 
-func ECICollect(w *qrpc.WorkersNetInfo) {
-
-}
-
 const EXP_BATCH_SIZE = 10 * 1024 * 1024
 
 // ExpMetricsCalc 计算 TPS 和 延迟
@@ -80,7 +77,7 @@ func ExpMetricsCalc(batches []*qrpc.ExpBatchMeta, latenciesMS []int64) (float64,
 
 // ExpMetricsTps 计算 TPS
 func ExpMetricsTps(batches []*qrpc.ExpBatchMeta) float64 {
-	log.Info().Interface("batches", batches).Msg("ExpMetricsTps")
+	// log.Info().Interface("batches", batches).Msg("ExpMetricsTps")
 	if len(batches) == 0 {
 		return 0
 	}
