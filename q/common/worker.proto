@@ -50,7 +50,7 @@ message ExpStartRequest{
 message ExpBatch{
   string id = 1;
   bytes payload = 2;
-  bytes tx_num = 3;
+  int64 tx_num = 3;
 }
 
 message ExpBatchMeta{

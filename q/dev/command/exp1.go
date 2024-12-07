@@ -44,7 +44,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 		Sk: os.Getenv("sk"),
 	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to call OssCase2Start")
+		log.Fatal().Err(err).Msg("failed to call Exp1BoradcastStart")
 	}
 
 	for {
