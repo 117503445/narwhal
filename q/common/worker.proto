@@ -38,11 +38,12 @@ service WorkerSlave {
   rpc Exp1Start(ExpStartRequest) returns (google.protobuf.Empty);
   rpc Exp1Boradcast(ExpBatch) returns (google.protobuf.Empty);
   rpc Exp1P2P(ExpBatch) returns (google.protobuf.Empty);
-  rpc Exp1GetMetrics(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc Exp1GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
 }
 
 message ExpStartRequest{
-
+  string ak = 1;
+  string sk = 2;
 }
 
 message ExpBatch{
@@ -52,6 +53,7 @@ message ExpBatch{
 message ExpBatchMeta{
   string id = 1;
   google.protobuf.Timestamp SubmittedAt = 2;
+  int64 TxNum = 3;
 }
 
 
