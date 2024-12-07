@@ -10,7 +10,7 @@ import (
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/protobuf/encoding/protojson"
+	// "google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -54,8 +54,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 			log.Error().Err(err).Msg("failed to call Exp1GetMetrics")
 			continue
 		}
-		log.Info().Str("metrics",
-			protojson.Format(metrics)).Msg("Exp1GetMetrics Done")
+		// log.Info().Str("metrics", protojson.Format(metrics)).Msg("Exp1GetMetrics Done")
 		if len(metrics.BatchMetas) < 1 {
 			continue
 		}
