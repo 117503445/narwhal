@@ -29,7 +29,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 	log.Info().Msg("Exp1CaseCMD")
 
-	w := DeployECI(4, 1)
+	w := DeployECI(4, 1, make(chan struct{}))
 	log.Info().Interface("w", w).Msg("DeployECI")
 
 	clients := make([]qrpc.WorkerSlave, 0)
@@ -39,7 +39,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 		clients = append(clients, c)
 	}
 
-	_, err = clients[0].Exp1Start(context.Background(), &qrpc.ExpStartRequest{
+	_, err = clients[0].Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
 		Ak: os.Getenv("ak"),
 		Sk: os.Getenv("sk"),
 	})
@@ -66,6 +66,10 @@ func (cmd *Exp1CaseCMD) Run() error {
 	}
 
 	return err
+}
+
+func ECICollect(w *qrpc.WorkersNetInfo) {
+
 }
 
 const EXP_BATCH_SIZE = 10 * 1024 * 1024

@@ -28,7 +28,7 @@ func (c *Oss2CaseCMD) Run() error {
 
 	goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-	w := DeployECI(4, 1)
+	w := DeployECI(4, 1, make(chan struct{}))
 	log.Info().Interface("w", w).Msg("DeployECI")
 
 	clients := make([]qrpc.WorkerSlave, 0)

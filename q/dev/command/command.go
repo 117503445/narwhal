@@ -75,7 +75,7 @@ func init() {
 }
 
 func DeployECI(
-	nodeCount int, workerCount int,
+	nodeCount int, workerCount int, stop chan struct{},
 ) *qrpc.WorkersNetInfo {
 	httpProxy := os.Getenv("http_proxy")
 	masterIp := os.Getenv("master_ip")
@@ -113,6 +113,13 @@ func DeployECI(
 		}
 	}
 
+	dirLogs := "./logs"
+	if err := os.MkdirAll(dirLogs, 0777); err != nil {
+		log.Fatal().Err(err).Msg("failed to create dir")
+	}
+
+	stops := make([]chan struct{}, 0)
+
 	createContainer := func(meta *ECIMeta) {
 		containerGroupName := fmt.Sprintf("biye-%d-%d-%s", meta.NodeID, meta.WorkerID, expID)
 		result, err := common.EciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{
@@ -138,11 +145,36 @@ func DeployECI(
 			SecurityGroupId: tea.String("sg-bp1chrrv37a1jm22u1v8"),
 			VSwitchId:       tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
 		})
-
 		if err != nil {
 			log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
 		}
 		log.Info().Interface("result", result).Msg("CreateContainerGroupRequest success")
+
+		cStop := make(chan struct{})
+		go func(stop chan struct{}) {
+			// collect log
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+					result, err := common.EciClient.DescribeContainerLog(&eci20180808.DescribeContainerLogRequest{
+						RegionId:         tea.String("cn-hangzhou"),
+						ContainerGroupId: result.Body.ContainerGroupId,
+						ContainerName:    tea.String("worker"),
+					})
+					if err != nil {
+						log.Error().Err(err).Msg("DescribeContainerLogRequest failed")
+					}
+					if result.Body != nil && result.Body.Content != nil {
+						goutils.WriteText(fmt.Sprintf("%s/%s-%d-%d.log", dirLogs, containerGroupName, meta.NodeID, meta.WorkerID), *result.Body.Content)
+					}
+
+					time.Sleep(time.Second * 10)
+				}
+			}
+		}(cStop)
+		stops = append(stops, cStop)
 
 		var internetIp *string
 
@@ -190,6 +222,13 @@ func DeployECI(
 	wg.Wait()
 
 	log.Info().Msg("all containers created")
+
+	go func() {
+		<-stop
+		for _, st := range stops {
+			close(st)
+		}
+	}()
 
 	for _, worker := range w.Workers {
 		wg.Add(1)
@@ -257,7 +296,7 @@ func (b *BuildCmd) Run() error {
 
 		goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-		DeployECI(4, 1)
+		DeployECI(4, 1, make(chan struct{}))
 
 		// registry-vpc.cn-hangzhou.aliyuncs.com/117503445/biye-slave
 

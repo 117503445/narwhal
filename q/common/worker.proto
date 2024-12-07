@@ -35,9 +35,10 @@ service WorkerSlave {
   rpc OssCase2SendBatch(OssCase2Batch) returns (google.protobuf.Empty);
   rpc OssCase2GetMetrics(google.protobuf.Empty) returns (OssCase2Metrics);
 
-  rpc Exp1Start(ExpStartRequest) returns (google.protobuf.Empty);
-  rpc Exp1Boradcast(ExpBatch) returns (google.protobuf.Empty);
-  rpc Exp1P2P(ExpBatch) returns (google.protobuf.Empty);
+  rpc Exp1BoradcastStart(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp1BoradcastRecvBatch(ExpBatch) returns (google.protobuf.Empty);
+  rpc Exp1P2PStart(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp1P2PRecvBatch(ExpBatch) returns (google.protobuf.Empty);
   rpc Exp1GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
 }
 
@@ -49,7 +50,9 @@ message ExpStartRequest{
 message ExpBatch{
   string id = 1;
   bytes payload = 2;
+  bytes tx_num = 3;
 }
+
 message ExpBatchMeta{
   string id = 1;
   google.protobuf.Timestamp SubmittedAt = 2;
