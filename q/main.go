@@ -31,6 +31,7 @@ var cli struct {
 	OssCase0          dev.Oss0CaseCMD                        `cmd:""`
 	OssCase1          dev.Oss1CaseCMD                        `cmd:""`
 	OssCase2          dev.Oss2CaseCMD                        `cmd:""`
+	Exp0         dev.Exp0CaseCMD                        `cmd:""`
 }
 
 func main() {
