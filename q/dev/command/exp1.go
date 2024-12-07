@@ -20,7 +20,7 @@ func (c *Exp1CaseCMD) Run() error {
 
 	goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-	log.Info().Msg("Exp0CaseCMD")
+	log.Info().Msg("Exp1CaseCMD")
 	
 	return err
 }

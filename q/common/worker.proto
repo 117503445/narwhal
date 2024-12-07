@@ -35,7 +35,29 @@ service WorkerSlave {
   rpc OssCase2SendBatch(OssCase2Batch) returns (google.protobuf.Empty);
   rpc OssCase2GetMetrics(google.protobuf.Empty) returns (OssCase2Metrics);
 
+  rpc Exp1Start(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp1Boradcast(ExpBatch) returns (google.protobuf.Empty);
+  rpc Exp1P2P(ExpBatch) returns (google.protobuf.Empty);
+  rpc Exp1GetMetrics(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
 
+message ExpStartRequest{
+
+}
+
+message ExpBatch{
+  string id = 1;
+  bytes payload = 2;
+}
+message ExpBatchMeta{
+  string id = 1;
+  google.protobuf.Timestamp SubmittedAt = 2;
+}
+
+
+message Exp1Metrics{
+  repeated int64 LatenciesMS = 1; // 每个 batch 的延迟的毫秒数
+  repeated ExpBatchMeta BatchMetas = 2; // 每个 batch 的元数据
 }
 
 service WorkerMaster {
