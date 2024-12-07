@@ -22,6 +22,9 @@ func OssCaseProcessBatches(batches []*qrpc.OssCaseBatchMeta) {
 	startTime := batches[0].ReceivedAt
 	endTime := batches[len(batches)-1].ReceivedAt
 	durSeconds := endTime.Seconds - startTime.Seconds
+	if durSeconds == 0 {
+		return
+	}
 	sizeSum := 0
 	for _, batch := range batches {
 		sizeSum += int(batch.Size)
