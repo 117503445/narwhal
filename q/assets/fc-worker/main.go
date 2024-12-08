@@ -50,6 +50,8 @@ type Server struct {
 
 	masterClient qrpc.WorkerMaster
 
+	otherClients []qrpc.WorkerSlave
+
 	sync.Mutex
 }
 
@@ -110,6 +112,15 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 	}
 
 	s.masterClient = qrpc.NewWorkerMasterProtobufClient(in.MasterUrl, httpClient)
+	s.otherClients = make([]qrpc.WorkerSlave, 0)
+	for nodeID, clients := range s.clients {
+		for _, client := range clients {
+			if nodeID == s.masterId {
+				continue
+			}
+			s.otherClients = append(s.otherClients, client)
+		}
+	}
 
 	return &emptypb.Empty{}, nil
 }

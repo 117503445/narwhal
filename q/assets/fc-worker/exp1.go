@@ -31,16 +31,16 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 	Exp1SetIsMaster(true)
 
 	go func() {
-		var otherClients []qrpc.WorkerSlave
+		// var otherClients []qrpc.WorkerSlave
 		var err error
-		for nodeID, clients := range s.clients {
-			if nodeID == s.masterId {
-				continue
-			}
-			for _, c := range clients {
-				otherClients = append(otherClients, c)
-			}
-		}
+		// for nodeID, clients := range s.clients {
+		// 	if nodeID == s.masterId {
+		// 		continue
+		// 	}
+		// 	for _, c := range clients {
+		// 		otherClients = append(otherClients, c)
+		// 	}
+		// }
 
 		go func() {
 			// produce batch
@@ -74,7 +74,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 					log.Info().Str("batchID", batchID).Int("pid", pid).Msg("sending batch")
 					payload := make([]byte, Exp1TxSize*Exp1BatchSize)
 
-					for _, otherClient := range otherClients {
+					for _, otherClient := range s.otherClients {
 						_, err = otherClient.Exp1BoradcastRecvBatch(context.Background(), &qrpc.ExpBatch{
 							Id:      batchID,
 							Payload: payload,
@@ -127,6 +127,10 @@ func (s *Server) Exp1GetMetrics(ctx context.Context, req *emptypb.Empty) (*qrpc.
 	log.Info().Msg("Exp1GetMetrics")
 	m := Exp1GetMetrics()
 	return m, nil
+}
+
+func BFTQuorumSize(n int) int {
+	return n*2/3 + 1
 }
 
 var exp1Metrics = &qrpc.Exp1Metrics{}
