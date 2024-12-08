@@ -70,7 +70,7 @@ func Exp1RunOnce(param *Exp1Param) {
 	oldTpsList := make([]float64, 0)
 	oldLatencyList := make([]float64, 0)
 
-	for {
+	for i := 0; i < 5; i++ {
 		log.Info().Msg("Exp1GetMetrics")
 		metrics, err := clients[0].Exp1GetMetrics(context.Background(), &emptypb.Empty{})
 		if err != nil {
@@ -120,6 +120,10 @@ func Exp1RunOnce(param *Exp1Param) {
 		"latency": latency,
 		"figure":  "batchsize 对 txpool 的影响",
 		"line":    "broadcast-txpool",
+
+		"debug_tps_list":     oldTpsList, // for debug
+		"debug_latency_list": oldLatencyList,
+		"debug_press":        param.Press,
 	})
 	RefreshExpID()
 
