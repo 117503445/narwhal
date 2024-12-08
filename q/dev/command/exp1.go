@@ -146,10 +146,18 @@ func Exp1RunOnce(param *Exp1Param) {
 }
 
 func (cmd *Exp1CaseCMD) Run() error {
+	// for _, press := range []int{1000000} {
+	// 	Exp1RunOnce(&Exp1Param{
+	// 		Press: press,
+	// 		Mode:  "broadcast",
+	// 		N:     8,
+	// 	})
+	// }
+
 	for _, press := range []int{1000000} {
 		Exp1RunOnce(&Exp1Param{
 			Press: press,
-			Mode:  "broadcast",
+			Mode:  "p2p",
 			N:     4,
 		})
 	}
