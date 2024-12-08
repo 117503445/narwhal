@@ -74,6 +74,10 @@ func init() {
 	expID = goutils.TimeStrSec()
 }
 
+func RefreshExpID() {
+	expID = goutils.TimeStrSec()
+}
+
 func DeployECI(
 	nodeCount int, workerCount int, stop chan struct{},
 ) *qrpc.WorkersNetInfo {

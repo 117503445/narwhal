@@ -17,7 +17,16 @@ import (
 type Exp1CaseCMD struct {
 }
 
-func (cmd *Exp1CaseCMD) Run() error {
+type Exp1Param struct {
+	Press int
+	Mode  string // broadcast or p2p
+}
+
+func Exp1RunOnce(param *Exp1Param) {
+	if param.Press == 0 || param.Mode == "" {
+		log.Fatal().Msg("Press and Mode are required")
+	}
+
 	var err error
 	goutils.Exec("docker compose up -d", goutils.WithCwd("../"))
 
@@ -39,11 +48,20 @@ func (cmd *Exp1CaseCMD) Run() error {
 		clients = append(clients, c)
 	}
 
-	_, err = clients[0].Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
-		Ak:    os.Getenv("ak"),
-		Sk:    os.Getenv("sk"),
-		Press: 1000,
-	})
+	if param.Mode == "broadcast" {
+		_, err = clients[0].Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
+			Ak:    os.Getenv("ak"),
+			Sk:    os.Getenv("sk"),
+			Press: int64(param.Press),
+		})
+	} else {
+		_, err = clients[0].Exp1P2PStart(context.Background(), &qrpc.ExpStartRequest{
+			Ak:    os.Getenv("ak"),
+			Sk:    os.Getenv("sk"),
+			Press: int64(param.Press),
+		})
+	}
+
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to call Exp1BoradcastStart")
 	}
@@ -90,7 +108,30 @@ func (cmd *Exp1CaseCMD) Run() error {
 	latency := oldLatencyList[len(oldLatencyList)-1]
 	log.Info().Float64("tps", tps).Float64("latency", latency).Msg("Exp1CaseCMD Done")
 
-	return err
+	dirRoot, err := goutils.FindGitRepoRoot()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to FindGitRepoRoot")
+	}
+
+	goutils.WriteJSON(fmt.Sprintf("%s/paper-exp-data/%v.json", dirRoot, w.ExpId), map[string]interface{}{
+		"tps":     tps,
+		"latency": latency,
+		"figure":  "batchsize 对 txpool 的影响",
+		"line":    "broadcast-txpool",
+	})
+	RefreshExpID()
+
+}
+
+func (cmd *Exp1CaseCMD) Run() error {
+	for _, press := range []int{1000, 2000, 3000, 4000, 5000} {
+		Exp1RunOnce(&Exp1Param{
+			Press: press,
+			Mode:  "broadcast",
+		})
+	}
+
+	return nil
 }
 
 const EXP_BATCH_SIZE = 10 * 1024 * 1024
