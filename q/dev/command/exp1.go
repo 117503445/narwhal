@@ -48,6 +48,9 @@ func (cmd *Exp1CaseCMD) Run() error {
 		log.Fatal().Err(err).Msg("failed to call Exp1BoradcastStart")
 	}
 
+	oldTpsList := make([]float64, 0)
+	oldLatencyList := make([]float64, 0)
+
 	for {
 		log.Info().Msg("Exp1GetMetrics")
 		metrics, err := clients[0].Exp1GetMetrics(context.Background(), &emptypb.Empty{})
@@ -62,8 +65,30 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 		tps, latency := ExpMetricsCalc(metrics.BatchMetas, metrics.LatenciesMS)
 		log.Info().Float64("tps", tps).Float64("latency", latency).Msg("ExpMetricsCalc")
+
+		oldTpsList = append(oldTpsList, tps)
+		oldLatencyList = append(oldLatencyList, latency)
+
+		// 如果 tps 和 延迟 相比前 2 次的变化都小于 5%，则认为已经收敛
+		if len(oldTpsList) > 3 && len(oldLatencyList) > 3 {
+			// 第 index 个值相比最后一个值的变化
+			getTpsChange := func(index int) float64 {
+				return (oldTpsList[index] - oldTpsList[len(oldTpsList)-1]) / oldTpsList[len(oldTpsList)-1]
+			}
+			getLatencyChange := func(index int) float64 {
+				return (oldLatencyList[index] - oldLatencyList[len(oldLatencyList)-1]) / oldLatencyList[len(oldLatencyList)-1]
+			}
+			if getTpsChange(len(oldTpsList)-2) < 0.05 && getTpsChange(len(oldTpsList)-3) < 0.05 && getLatencyChange(len(oldLatencyList)-2) < 0.05 && getLatencyChange(len(oldLatencyList)-3) < 0.05 {
+				break
+			}
+		}
+
 		time.Sleep(time.Second * 10)
 	}
+
+	tps := oldTpsList[len(oldTpsList)-1]
+	latency := oldLatencyList[len(oldLatencyList)-1]
+	log.Info().Float64("tps", tps).Float64("latency", latency).Msg("Exp1CaseCMD Done")
 
 	return err
 }

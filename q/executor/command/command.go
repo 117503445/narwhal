@@ -14,8 +14,6 @@ func (*ExecutorCmd) Run() error {
 	goutils.InitZeroLog(goutils.WithNoColor{})
 	log.Info().Msg("Executor Run")
 
-
-
 	server.NewServer().Run()
 
 	return nil
