@@ -1,0 +1,6 @@
+{
+    "figure": "batchsize 对 txpool 的影响",
+    "latency": 0.006,
+    "line": "broadcast-txpool",
+    "tps": 2022.426886799558
+}
