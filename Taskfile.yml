@@ -6,6 +6,13 @@ tasks:
     dir: q
     cmds:
       - go run . exp-1
+
+  send-req:
+    desc: "send-req"
+    dir: Docker
+    cmds:
+      - docker compose exec -T worker_0 ./bin/q send-req
+
   oss-case-0:
     desc: "2 个 ECI 之间的内网通信"
     dir: q

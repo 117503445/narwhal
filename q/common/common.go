@@ -14,7 +14,7 @@ import (
 // SendTransactionToNarwhalWorker 向 Narwhal Worker 发送一笔交易
 func SendTransactionToNarwhalWorker(client rpc.TransactionsClient, payload string) error {
 	var err error
-	size := 1024 // 假设大小为1024
+	size := 512 // 假设大小为1024
 	// var r uint64 = 0
 
 	// 创建一个字节缓冲区
