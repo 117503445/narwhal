@@ -20,10 +20,11 @@ type Exp1CaseCMD struct {
 type Exp1Param struct {
 	Press int
 	Mode  string // broadcast or p2p
+	N     int
 }
 
 func Exp1RunOnce(param *Exp1Param) {
-	if param.Press == 0 || param.Mode == "" {
+	if param.Press == 0 || param.Mode == "" || param.N == 0 {
 		log.Fatal().Msg("Press and Mode are required")
 	}
 
@@ -39,7 +40,9 @@ func Exp1RunOnce(param *Exp1Param) {
 	log.Info().Msg("Exp1CaseCMD")
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
-	w := DeployECI(4, 1, make(chan struct{}), nil)
+	w := DeployECI(param.N, 1, make(chan struct{}), &ECIParam{
+		Bandwidth: 12.5,
+	})
 	log.Info().Interface("w", w).Msg("DeployECI")
 
 	clients := make([]qrpc.WorkerSlave, 0)
@@ -70,7 +73,7 @@ func Exp1RunOnce(param *Exp1Param) {
 	oldTpsList := make([]float64, 0)
 	oldLatencyList := make([]float64, 0)
 
-	for i := 0; i < 5; i++ {
+	for {
 		log.Info().Msg("Exp1GetMetrics")
 		metrics, err := clients[0].Exp1GetMetrics(context.Background(), &emptypb.Empty{})
 		if err != nil {
@@ -85,9 +88,10 @@ func Exp1RunOnce(param *Exp1Param) {
 
 		tps, latency := ExpMetricsCalc(metrics.BatchMetas, metrics.LatenciesMS)
 		log.Info().Float64("tps", tps).Float64("latency", latency).Msg("ExpMetricsCalc")
-
-		oldTpsList = append(oldTpsList, tps)
-		oldLatencyList = append(oldLatencyList, latency)
+		if tps > 0 && latency > 0 {
+			oldTpsList = append(oldTpsList, tps)
+			oldLatencyList = append(oldLatencyList, latency)
+		}
 
 		// 如果 tps 和 延迟 相比前 2 次的变化都小于 5%，则认为已经收敛
 		// if len(oldTpsList) > 3 && len(oldLatencyList) > 3 {
@@ -102,6 +106,14 @@ func Exp1RunOnce(param *Exp1Param) {
 		// 		break
 		// 	}
 		// }
+		if len(oldTpsList) > 5 {
+			getTpsChange := func(index int) float64 {
+				return (oldTpsList[index] - oldTpsList[len(oldTpsList)-1]) / oldTpsList[len(oldTpsList)-1]
+			}
+			if getTpsChange(len(oldTpsList)-2) < 0.01 && getTpsChange(len(oldTpsList)-3) < 0.01 {
+				break
+			}
+		}
 
 		time.Sleep(time.Second * 10)
 	}
@@ -115,7 +127,7 @@ func Exp1RunOnce(param *Exp1Param) {
 		log.Fatal().Err(err).Msg("failed to FindGitRepoRoot")
 	}
 
-	goutils.WriteJSON(fmt.Sprintf("%s/paper-exp-data/%v.json", dirRoot, w.ExpId), map[string]interface{}{
+	err = goutils.WriteJSON(fmt.Sprintf("%s/paper-exp-data/%v.json", dirRoot, w.ExpId), map[string]interface{}{
 		"tps":     tps,
 		"latency": latency,
 		"figure":  "batchsize 对 txpool 的影响",
@@ -124,9 +136,13 @@ func Exp1RunOnce(param *Exp1Param) {
 		"debug_tps_list":     oldTpsList, // for debug
 		"debug_latency_list": oldLatencyList,
 		"debug_press":        param.Press,
+		"debug_mode":         param.Mode,
+		"debug_n":            param.N,
 	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to WriteJSON")
+	}
 	RefreshExpID()
-
 }
 
 func (cmd *Exp1CaseCMD) Run() error {
@@ -134,6 +150,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 		Exp1RunOnce(&Exp1Param{
 			Press: press,
 			Mode:  "broadcast",
+			N:     4,
 		})
 	}
 
@@ -142,7 +159,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 const EXP_BATCH_SIZE = 10 * 1024 * 1024
 
-// ExpMetricsCalc 计算 TPS 和 延迟
+// ExpMetricsCalc 计算 TPS 和 延迟, 0 代表无效
 func ExpMetricsCalc(batches []*qrpc.ExpBatchMeta, latenciesMS []int64) (float64, float64) {
 	return ExpMetricsTps(batches), ExpMetricsLatency(latenciesMS)
 }
@@ -154,6 +171,9 @@ func ExpMetricsTps(batches []*qrpc.ExpBatchMeta) float64 {
 		return 0
 	}
 	dur := batches[len(batches)-1].SubmittedAt.AsTime().Sub(batches[0].SubmittedAt.AsTime())
+	if dur.Seconds() == 0 {
+		return 0
+	}
 	txNum := 0
 	for _, b := range batches {
 		txNum += int(b.TxNum)

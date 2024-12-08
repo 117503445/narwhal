@@ -6,6 +6,7 @@ tasks:
     dir: q
     cmds:
       - go run . exp-1
+      - go-task ding
 
   send-req:
     desc: "send-req"
@@ -37,3 +38,6 @@ tasks:
     desc: "Generate the proto files"
     cmds:
       - docker compose exec -T q-dev /workspace/q/script/proto.sh
+  ding:
+    cmds:
+      - curl "https://message-pusher.ali.117503445.top/push/root?title=Done&description=Done&content=Done&channel=ding&token=T8eRGoAV9VpP&channel"

@@ -14,6 +14,7 @@ import (
 )
 
 var Exp1BatchSize = 100000
+var Exp1TxSize = 512
 
 // Exp1BoradcastStart(context.Context, *ExpStartRequest) (*google_protobuf.Empty, error)
 
@@ -71,7 +72,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 			go func(pid int) {
 				for batchID := range batchesChan {
 					log.Info().Str("batchID", batchID).Int("pid", pid).Msg("sending batch")
-					payload := make([]byte, 512*Exp1BatchSize)
+					payload := make([]byte, Exp1TxSize*Exp1BatchSize)
 
 					for _, otherClient := range otherClients {
 						_, err = otherClient.Exp1BoradcastRecvBatch(context.Background(), &qrpc.ExpBatch{

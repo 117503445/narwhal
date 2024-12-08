@@ -91,7 +91,7 @@ func DeployECI(
 		}
 	}
 	// 以 Byte per second 为单位
-	// bandwidth := int64(param.Bandwidth * 1024 * 1024)
+	bandwidth := int64(param.Bandwidth * 1024 * 1024)
 
 	httpProxy := os.Getenv("http_proxy")
 	masterIp := os.Getenv("master_ip")
@@ -160,8 +160,8 @@ func DeployECI(
 			AutoCreateEip:    tea.Bool(true),
 			SecurityGroupId:  tea.String("sg-bp1chrrv37a1jm22u1v8"),
 			VSwitchId:        tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
-			// IngressBandwidth: tea.Int64(bandwidth),
-			// EgressBandwidth:  tea.Int64(bandwidth),
+			IngressBandwidth: tea.Int64(bandwidth),
+			EgressBandwidth:  tea.Int64(bandwidth),
 		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
