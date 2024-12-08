@@ -13,8 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var Exp1BatchSize = 100000
-var Exp1TxSize = 512
+var Exp1BatchSize = 5000
+var Exp1TxSize = 128
 
 // Exp1BoradcastStart(context.Context, *ExpStartRequest) (*google_protobuf.Empty, error)
 
