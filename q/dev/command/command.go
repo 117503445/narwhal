@@ -78,9 +78,21 @@ func RefreshExpID() {
 	expID = goutils.TimeStrSec()
 }
 
+type ECIParam struct {
+	Bandwidth float64 // 带宽限制，单位 MB
+}
+
 func DeployECI(
-	nodeCount int, workerCount int, stop chan struct{},
+	nodeCount int, workerCount int, stop chan struct{}, param *ECIParam,
 ) *qrpc.WorkersNetInfo {
+	if param == nil {
+		param = &ECIParam{
+			Bandwidth: 125,
+		}
+	}
+	// 以 Byte per second 为单位
+	// bandwidth := int64(param.Bandwidth * 1024 * 1024)
+
 	httpProxy := os.Getenv("http_proxy")
 	masterIp := os.Getenv("master_ip")
 
@@ -141,13 +153,15 @@ func DeployECI(
 					},
 				},
 			},
-			RestartPolicy:   tea.String("Never"),
-			Cpu:             tea.Float32(2),
-			Memory:          tea.Float32(2),
-			SpotStrategy:    tea.String("SpotAsPriceGo"),
-			AutoCreateEip:   tea.Bool(true),
-			SecurityGroupId: tea.String("sg-bp1chrrv37a1jm22u1v8"),
-			VSwitchId:       tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
+			RestartPolicy:    tea.String("Never"),
+			Cpu:              tea.Float32(2),
+			Memory:           tea.Float32(2),
+			SpotStrategy:     tea.String("SpotAsPriceGo"),
+			AutoCreateEip:    tea.Bool(true),
+			SecurityGroupId:  tea.String("sg-bp1chrrv37a1jm22u1v8"),
+			VSwitchId:        tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
+			// IngressBandwidth: tea.Int64(bandwidth),
+			// EgressBandwidth:  tea.Int64(bandwidth),
 		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
@@ -300,7 +314,7 @@ func (b *BuildCmd) Run() error {
 
 		goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-		DeployECI(4, 1, make(chan struct{}))
+		DeployECI(4, 1, make(chan struct{}), nil)
 
 		// registry-vpc.cn-hangzhou.aliyuncs.com/117503445/biye-slave
 

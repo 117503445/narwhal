@@ -5,8 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/shirou/gopsutil/v4/cpu"
 	"time"
+
+	"github.com/shirou/gopsutil/v4/cpu"
 
 	// "fmt"
 	"net/http"
@@ -67,18 +68,18 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 			s.clients[nodeID][workerID] = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.IntranetIp), &http.Client{})
 		}
 	}
-	go func() {
-		time.Sleep(10 * time.Second)
-		log.Info().Msg("PutBatch")
-		_, err := s.PutBatch(context.Background(), &qrpc.PutBatchRequest{
-			Id:      fmt.Sprintf("from %d", s.slaveId),
-			Payload: fmt.Sprintf("from %d", s.slaveId),
-		})
-		if err != nil {
-			log.Fatal().Err(err).Msg("PutBatch failed")
-		}
-		log.Info().Msg("PutBatch done")
-	}()
+	// go func() {
+	// 	time.Sleep(10 * time.Second)
+	// 	log.Info().Msg("PutBatch")
+	// 	_, err := s.PutBatch(context.Background(), &qrpc.PutBatchRequest{
+	// 		Id:      fmt.Sprintf("from %d", s.slaveId),
+	// 		Payload: fmt.Sprintf("from %d", s.slaveId),
+	// 	})
+	// 	if err != nil {
+	// 		log.Fatal().Err(err).Msg("PutBatch failed")
+	// 	}
+	// 	log.Info().Msg("PutBatch done")
+	// }()
 
 	s.masterId = int(in.MasterId)
 	s.slaveId = int(in.SlaveId)
@@ -285,7 +286,6 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to get cpu info")
 	}
 	log.Info().Interface("cpuInfo", cpuInfo).Msg("cpu info")
-
 	log.Info().Msg("Starting server...")
 
 	rpcServer := NewServer()

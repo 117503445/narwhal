@@ -13,6 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var Exp1BatchSize = 100000
+
 // Exp1BoradcastStart(context.Context, *ExpStartRequest) (*google_protobuf.Empty, error)
 
 // Exp1BoradcastRecvBatch(context.Context, *ExpBatch) (*google_protobuf.Empty, error)
@@ -50,7 +52,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 
 				// press: 每秒钟的预期 tps
 				// 预期每个批次耗费的毫秒数
-				msPerBatch := int(1000 * 1000 / req.Press)
+				msPerBatch := int(float64(Exp1BatchSize) * 1000 / float64(req.Press))
 
 				remain := msPerBatch - int(time.Since(start).Milliseconds())
 
@@ -64,33 +66,34 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 			}
 		}()
 
-		const PROCESS_NUM = 3
+		const PROCESS_NUM = 1
 		for i := 0; i < PROCESS_NUM; i++ {
 			go func(pid int) {
 				for batchID := range batchesChan {
 					log.Info().Str("batchID", batchID).Int("pid", pid).Msg("sending batch")
-					// 512KB
-					payload := make([]byte, 512*1024)
+					payload := make([]byte, 512*Exp1BatchSize)
 
 					for _, otherClient := range otherClients {
 						_, err = otherClient.Exp1BoradcastRecvBatch(context.Background(), &qrpc.ExpBatch{
 							Id:      batchID,
 							Payload: payload,
-							TxNum:   1000,
+							TxNum:   int64(Exp1BatchSize),
 						})
 
 						if err != nil {
 							log.Error().Err(err).Msg("Exp1BoradcastRecvBatch")
 						}
-						log.Info().Msg("Send Exp1BoradcastRecvBatch")
+						log.Info().Int("pid", pid).Str("batchID", batchID).Msg("sending batch to one client success")
 					}
 					latency := Exp1GetBatchLatency(batchID).Milliseconds()
 					Exp1AddLatency(latency)
 
 					Exp1AddBatchMeta(&qrpc.ExpBatchMeta{
 						SubmittedAt: timestamppb.Now(),
-						TxNum:       1000,
+						TxNum:       int64(Exp1BatchSize),
 					})
+
+					// log.Info().Msg("sending batch to one client success")
 				}
 			}(i)
 		}

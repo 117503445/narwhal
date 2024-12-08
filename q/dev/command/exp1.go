@@ -38,7 +38,8 @@ func Exp1RunOnce(param *Exp1Param) {
 
 	log.Info().Msg("Exp1CaseCMD")
 
-	w := DeployECI(4, 1, make(chan struct{}))
+	// 80000 交易 * 512B/交易 * 3 = 120MB
+	w := DeployECI(4, 1, make(chan struct{}), nil)
 	log.Info().Interface("w", w).Msg("DeployECI")
 
 	clients := make([]qrpc.WorkerSlave, 0)
@@ -78,6 +79,7 @@ func Exp1RunOnce(param *Exp1Param) {
 		}
 		// log.Info().Str("metrics", protojson.Format(metrics)).Msg("Exp1GetMetrics Done")
 		if len(metrics.BatchMetas) < 1 {
+			time.Sleep(time.Second * 10)
 			continue
 		}
 
@@ -88,18 +90,18 @@ func Exp1RunOnce(param *Exp1Param) {
 		oldLatencyList = append(oldLatencyList, latency)
 
 		// 如果 tps 和 延迟 相比前 2 次的变化都小于 5%，则认为已经收敛
-		if len(oldTpsList) > 3 && len(oldLatencyList) > 3 {
-			// 第 index 个值相比最后一个值的变化
-			getTpsChange := func(index int) float64 {
-				return (oldTpsList[index] - oldTpsList[len(oldTpsList)-1]) / oldTpsList[len(oldTpsList)-1]
-			}
-			getLatencyChange := func(index int) float64 {
-				return (oldLatencyList[index] - oldLatencyList[len(oldLatencyList)-1]) / oldLatencyList[len(oldLatencyList)-1]
-			}
-			if getTpsChange(len(oldTpsList)-2) < 0.05 && getTpsChange(len(oldTpsList)-3) < 0.05 && getLatencyChange(len(oldLatencyList)-2) < 0.05 && getLatencyChange(len(oldLatencyList)-3) < 0.05 {
-				break
-			}
-		}
+		// if len(oldTpsList) > 3 && len(oldLatencyList) > 3 {
+		// 	// 第 index 个值相比最后一个值的变化
+		// 	getTpsChange := func(index int) float64 {
+		// 		return (oldTpsList[index] - oldTpsList[len(oldTpsList)-1]) / oldTpsList[len(oldTpsList)-1]
+		// 	}
+		// 	getLatencyChange := func(index int) float64 {
+		// 		return (oldLatencyList[index] - oldLatencyList[len(oldLatencyList)-1]) / oldLatencyList[len(oldLatencyList)-1]
+		// 	}
+		// 	if getTpsChange(len(oldTpsList)-2) < 0.05 && getTpsChange(len(oldTpsList)-3) < 0.05 && getLatencyChange(len(oldLatencyList)-2) < 0.05 && getLatencyChange(len(oldLatencyList)-3) < 0.05 {
+		// 		break
+		// 	}
+		// }
 
 		time.Sleep(time.Second * 10)
 	}
@@ -124,7 +126,7 @@ func Exp1RunOnce(param *Exp1Param) {
 }
 
 func (cmd *Exp1CaseCMD) Run() error {
-	for _, press := range []int{1000, 2000, 3000, 4000, 5000} {
+	for _, press := range []int{1000000} {
 		Exp1RunOnce(&Exp1Param{
 			Press: press,
 			Mode:  "broadcast",

@@ -1,9 +1,11 @@
 module fc-worker
 
-go 1.23.1
+go 1.23.2
+
+toolchain go1.23.4
 
 require (
-	github.com/117503445/goutils v0.0.0-20241023113855-7542b5286948
+	github.com/117503445/goutils v0.0.0-20241208164233-fe236427e42b
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.1.2
 	github.com/rs/zerolog v1.33.0
 	github.com/shirou/gopsutil/v4 v4.24.11
@@ -26,7 +28,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
 	q v0.0.0-00010101000000-000000000000
 )
 
