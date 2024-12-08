@@ -38,6 +38,7 @@ service WorkerSlave {
   rpc Exp1BoradcastStart(ExpStartRequest) returns (google.protobuf.Empty);
   rpc Exp1BoradcastRecvBatch(ExpBatch) returns (google.protobuf.Empty);
   rpc Exp1P2PStart(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp1P2PGetBatchStatus(Exp1P2PGetBatchStatusRequest) returns (Exp1P2PGetBatchStatusResponse);
   rpc Exp1P2PRecvBatch(ExpBatch) returns (google.protobuf.Empty);
   rpc Exp1GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
 }
@@ -46,6 +47,14 @@ message ExpStartRequest{
   string ak = 1;
   string sk = 2;
   int64 press = 3;
+}
+
+message Exp1P2PGetBatchStatusRequest{
+  string id = 1;
+}
+
+message Exp1P2PGetBatchStatusResponse{
+  string status = 1; // "give-me" "other-giving" "done"
 }
 
 message ExpBatch{

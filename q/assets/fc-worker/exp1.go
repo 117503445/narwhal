@@ -25,6 +25,7 @@ import (
 
 func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartRequest) (*emptypb.Empty, error) {
 	log.Info().Msg("Exp1BoradcastStart")
+	Exp1SetIsMaster(true)
 
 	go func() {
 		var otherClients []qrpc.WorkerSlave
@@ -45,7 +46,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 				id := goutils.UUID4()
 				batchesChan <- id
 
-				SetBatchCreated(id)
+				Exp1SetBatchCreated(id)
 
 				// press: 每秒钟的预期 tps
 				// 预期每个批次耗费的毫秒数
@@ -83,10 +84,10 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 						}
 						log.Info().Msg("Send Exp1BoradcastRecvBatch")
 					}
-					latency := GetBatchLatency(batchID).Milliseconds()
-					AddExp1Latency(latency)
+					latency := Exp1GetBatchLatency(batchID).Milliseconds()
+					Exp1AddLatency(latency)
 
-					AddExp1BatchMeta(&qrpc.ExpBatchMeta{
+					Exp1AddBatchMeta(&qrpc.ExpBatchMeta{
 						SubmittedAt: timestamppb.Now(),
 						TxNum:       1000,
 					})
@@ -113,9 +114,14 @@ func (s *Server) Exp1P2PRecvBatch(ctx context.Context, batch *qrpc.ExpBatch) (*e
 	return &emptypb.Empty{}, nil
 }
 
+func (s *Server) Exp1P2PGetBatchStatus(ctx context.Context, req *qrpc.Exp1P2PGetBatchStatusRequest) (*qrpc.Exp1P2PGetBatchStatusResponse, error) {
+
+	return &qrpc.Exp1P2PGetBatchStatusResponse{}, nil
+}
+
 func (s *Server) Exp1GetMetrics(ctx context.Context, req *emptypb.Empty) (*qrpc.Exp1Metrics, error) {
 	log.Info().Msg("Exp1GetMetrics")
-	m := GetExp1Metrics()
+	m := Exp1GetMetrics()
 	return m, nil
 }
 
@@ -125,35 +131,54 @@ var exp1MetricsLock sync.Mutex
 var exp1BatchCreated map[string]time.Time = make(map[string]time.Time, 0)
 var exp1BatchCreatedLock sync.Mutex
 
+// batch id -> "receiving", "received"
+var exp1BatchStorageStatus map[string]string = make(map[string]string, 0)
+var exp1BatchStorageLock sync.RWMutex
+
+var isMaster bool
+var isMasterLock sync.RWMutex
+
 var batchesChan = make(chan string, 1000)
 
-func GetExp1Metrics() *qrpc.Exp1Metrics {
+func Exp1GetMetrics() *qrpc.Exp1Metrics {
 	exp1MetricsLock.Lock()
 	defer exp1MetricsLock.Unlock()
 	return exp1Metrics
 }
 
-func AddExp1BatchMeta(batch *qrpc.ExpBatchMeta) {
+func Exp1AddBatchMeta(batch *qrpc.ExpBatchMeta) {
 	exp1MetricsLock.Lock()
 	defer exp1MetricsLock.Unlock()
 	exp1Metrics.BatchMetas = append(exp1Metrics.BatchMetas, batch)
 }
 
-func AddExp1Latency(latency int64) {
+func Exp1AddLatency(latency int64) {
 	exp1MetricsLock.Lock()
 	defer exp1MetricsLock.Unlock()
 	exp1Metrics.LatenciesMS = append(exp1Metrics.LatenciesMS, latency)
 }
 
-func SetBatchCreated(id string) {
+func Exp1SetBatchCreated(id string) {
 	exp1BatchCreatedLock.Lock()
 	defer exp1BatchCreatedLock.Unlock()
 	exp1BatchCreated[id] = time.Now()
 }
 
-func GetBatchLatency(id string) time.Duration {
+func Exp1GetBatchLatency(id string) time.Duration {
 	exp1BatchCreatedLock.Lock()
 	defer exp1BatchCreatedLock.Unlock()
 	start := exp1BatchCreated[id]
 	return time.Since(start)
+}
+
+func Exp1GetIsMaster() bool {
+	isMasterLock.RLock()
+	defer isMasterLock.RUnlock()
+	return isMaster
+}
+
+func Exp1SetIsMaster(b bool) {
+	isMasterLock.Lock()
+	defer isMasterLock.Unlock()
+	isMaster = b
 }
