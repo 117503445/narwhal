@@ -157,7 +157,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 	var wg sync.WaitGroup
 
 	// for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
-	for _, press := range []int{20000} {
+	for _, press := range []int{30000, 35000, 40000, 45000} {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
