@@ -156,16 +156,22 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 	var wg sync.WaitGroup
 
+	pressList := []int{100000}
+	n := 16
+	mode := "broadcast"
+	// mode := "p2p"
+
 	// for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
-	for _, press := range []int{30000, 35000, 40000, 45000} {
+	// for _, press := range []int{30000, 35000, 40000, 45000} {
+	for _, press := range pressList {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			Exp1RunOnce(&Exp1Param{
 				Press: press,
 				// Mode:  "p2p",
-				Mode:  "broadcast",
-				N:     4,
+				Mode: mode,
+				N:    n,
 			})
 		}()
 
