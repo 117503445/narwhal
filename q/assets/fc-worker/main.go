@@ -244,14 +244,23 @@ func (s *Server) ReceiveBatch(ctx context.Context, in *qrpc.PutBatchRequest) (*e
 	return &emptypb.Empty{}, nil
 }
 
+var lastActiveTime time.Time
+var isProxy bool
+
 func NewServer() *Server {
 	log.Info().Msg("NewServer")
 	var err error
 
 	go func() {
-		time.Sleep(10 * time.Minute)
-		log.Info().Msg("Timeout")
-		os.Exit(1)
+		lastActiveTime = time.Now()
+		for {
+			// kill me
+			if (!isProxy && time.Since(lastActiveTime) > 5*time.Minute) || (isProxy && time.Since(lastActiveTime) > 25*time.Minute) {
+				log.Info().Msg("Timeout")
+				os.Exit(1)
+			}
+			time.Sleep(10 * time.Second)
+		}
 	}()
 
 	log.Info().Str("urlMapJSON", urlMapJSON).Msg("parse")

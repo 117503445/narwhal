@@ -19,6 +19,7 @@ service WorkerSlave {
   rpc ReceiveBatch(PutBatchRequest) returns (google.protobuf.Empty);
 
   rpc PutWorkersNetInfo(WorkersNetInfo) returns (google.protobuf.Empty);
+  rpc PutWorkersNetInfoPublic(WorkersNetInfo) returns (google.protobuf.Empty);
 
   rpc OssCase0Start(google.protobuf.Empty) returns (google.protobuf.Empty);
 

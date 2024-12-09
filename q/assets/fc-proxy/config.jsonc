@@ -1,0 +1,17 @@
+{
+    "log": {
+        "level": "debug"
+    },
+    "inbounds": [
+        {
+            "type": "http",
+            "listen": "::",
+            "listen_port": 20001
+        }
+    ],
+    "outbounds": [
+        {
+            "type": "direct"
+        }
+    ]
+}
