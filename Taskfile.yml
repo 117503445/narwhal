@@ -5,9 +5,7 @@ tasks:
     desc: "The default task"
     dir: q
     cmds:
-      - go run . exp-1
-      - go-task ding
-
+      - go run . build
   send-req:
     desc: "send-req"
     dir: Docker
@@ -41,3 +39,9 @@ tasks:
   ding:
     cmds:
       - curl "https://message-pusher.ali.117503445.top/push/root?title=Done&description=Done&content=Done&channel=ding&token=T8eRGoAV9VpP&channel"
+  exp-1:
+    desc: "exp-1"
+    dir: q
+    cmds:
+      - go run . exp-1
+      - go-task ding

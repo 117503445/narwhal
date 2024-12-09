@@ -199,6 +199,7 @@ where
         let request = tonic::Request::new(ExecuteInfo{
             consensus_round: consensus_output.consensus_index as i32,
             execute_height: self.execute_height,
+            tx_num: total_transactions as i32,
         });
 
         let response = self.q_client.put_execute_info(request).await.map_err(|e| {

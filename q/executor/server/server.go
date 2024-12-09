@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"q/common"
 	"q/executor/store"
 	"q/rpc"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -40,10 +42,22 @@ func (s *Server) broadcastQuorumCheckPoint(checkPoint *rpc.QuorumCheckpoint) {
 	}
 }
 
+var fisrtRecv time.Time
+var txSum int
+
 func (s *Server) PutExecuteInfo(_ context.Context, in *rpc.ExecuteInfo) (*emptypb.Empty, error) {
-	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Msg("PutExecuteInfo")
+	log.Info().Int32("ConsensusRound", in.ConsensusRound).Int32("ExecuteHeight", in.ExecuteHeight).Int32("txNum", in.TxNum).Msg("PutExecuteInfo")
+	if fisrtRecv.IsZero() {
+		fisrtRecv = time.Now()
+	}
+	txSum += int(in.TxNum)
+	dur := time.Since(fisrtRecv)
+
+	tps := float64(txSum) / dur.Seconds()
+	log.Info().Float64("tps", tps * common.NarwhalTxN).Msg("tps")
 
 	go func() {
+		return
 		shouldGenerateCheckPoint := true
 		if !shouldGenerateCheckPoint {
 			return

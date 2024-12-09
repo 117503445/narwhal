@@ -220,6 +220,7 @@ service Executor {
 message ExecuteInfo {
     int32 ConsensusRound = 1;
     int32 ExecuteHeight = 2;
+    int32 TxNum = 3;
 }
 
 message Checkpoint {

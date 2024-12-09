@@ -413,7 +413,11 @@ func (b *BuildCmd) Run() error {
 
 		goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-		DeployECI(4, 1, make(chan struct{}), nil)
+		goutils.Exec(fmt.Sprintf("docker build -t registry.cn-hangzhou.aliyuncs.com/117503445/biye-proxy:%v .", expID), goutils.WithCwd("./assets/fc-proxy"))
+
+		goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-proxy:%v", expID), goutils.WithCwd("./assets/fc-proxy"))
+
+		// DeployECI(4, 1, make(chan struct{}), nil)
 
 		// registry-vpc.cn-hangzhou.aliyuncs.com/117503445/biye-slave
 
@@ -508,7 +512,7 @@ func (r *DeleteECICMD) Run() error {
 			if err != nil {
 				log.Fatal().Err(err).Msg("failed to parse time")
 			}
-			if time.Since(createAt) > time.Minute*45 {
+			if time.Since(createAt) > time.Minute*15 {
 				log.Info().Time("createAt", createAt).Msg("delete proxy container")
 				_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
 					ContainerGroupId: resp.Body.ContainerGroups[0].ContainerGroupId,
@@ -517,8 +521,11 @@ func (r *DeleteECICMD) Run() error {
 				if err != nil {
 					log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
 				}
+			} else {
+				log.Info().Time("createAt", createAt).Dur("dur", time.Since(createAt)).Msg("proxy container exists")
 			}
-
+		} else {
+			log.Info().Msg("proxy container not exists")
 		}
 
 		time.Sleep(time.Second * 10)

@@ -3,6 +3,10 @@ package command
 import (
 	"q/common"
 	"q/rpc"
+	"sync"
+	"time"
+
+	// "time"
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
@@ -25,7 +29,20 @@ func (*SendReqCmd) Run() error {
 	}
 	client := rpc.NewTransactionsClient(conn)
 
-	common.SendTransactionToNarwhalWorker(client, "hello")
+	var wg sync.WaitGroup
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				common.SendTransactionToNarwhalWorker(client, "hello", 1)
+				time.Sleep(1 * time.Second)
+			}
+		}()
+	}
+
+	wg.Wait()
 
 	return nil
 }

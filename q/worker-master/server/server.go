@@ -61,7 +61,7 @@ type Server struct {
 }
 
 func (s *Server) PutTestTx(ctx context.Context, in *rpc.QTransaction) (*emptypb.Empty, error) {
-	common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload)
+	common.SendTransactionToNarwhalWorker(s.transactionsClient, in.Payload, 1)
 
 	return &emptypb.Empty{}, nil
 }
