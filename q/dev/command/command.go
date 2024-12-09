@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
+
 	// "strings"
 	"sync"
 	"text/template"
@@ -19,6 +21,8 @@ import (
 	"q/common"
 	"q/qrpc"
 )
+
+const proxyContainerGroupName = "biye-proxy"
 
 // UpdateTemplate 更新模板
 func UpdateTemplate() {
@@ -85,7 +89,7 @@ type ECIParam struct {
 
 func DeployECI(
 	nodeCount int, workerCount int, stop chan struct{}, param *ECIParam,
-) *qrpc.WorkersNetInfo {
+) (*qrpc.WorkersNetInfo, *http.Client) {
 	if param == nil {
 		param = &ECIParam{
 			Bandwidth: 125,
@@ -95,7 +99,7 @@ func DeployECI(
 	bandwidth := int64(param.Bandwidth * 1024 * 1024)
 
 	httpProxy := os.Getenv("http_proxy")
-	// masterIp := os.Getenv("master_ip")
+	masterIp := os.Getenv("master_ip")
 
 	NODE_COUNT := 4
 	if nodeCount > 0 {
@@ -136,9 +140,9 @@ func DeployECI(
 	}
 
 	// create proxy container client
-	const proxyContainerGroupName = "biye-proxy"
+
 	// return nil if failed
-	getProxyClient := func() qrpc.WorkerSlave {
+	getProxyClient := func() *http.Client {
 		resp, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
 			RegionId:           tea.String("cn-hangzhou"),
 			ContainerGroupName: tea.String(proxyContainerGroupName),
@@ -156,7 +160,24 @@ func DeployECI(
 		if internetIp == nil {
 			return nil
 		}
-		client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", *internetIp), &http.Client{})
+
+		proxyURL, err := url.Parse(fmt.Sprintf("http://%s:20001", *internetIp))
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error parsing proxy URL")
+		}
+
+		client := &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyURL(proxyURL),
+			},
+		}
+
+		// visit baidu.com to test proxy
+		_, err = client.Get("http://www.baidu.com")
+		if err != nil {
+			log.Error().Err(err).Msg("failed to test proxy")
+			return nil
+		}
 
 		return client
 	}
@@ -270,12 +291,11 @@ func DeployECI(
 			if len(result.Body.ContainerGroups) > 0 {
 				// internetIp = result.Body.ContainerGroups[0].InternetIp
 				intranetIp := result.Body.ContainerGroups[0].IntranetIp
-				if result.Body.ContainerGroups[0].IntranetIp != nil {
+				if intranetIp != nil && *intranetIp != "" {
 					internetIp := ""
 					if result.Body.ContainerGroups[0].InternetIp != nil {
 						internetIp = *result.Body.ContainerGroups[0].InternetIp
 					}
-					
 
 					log.Info().Str("internetIp", internetIp).Str("intranetIp", *intranetIp).Msg("DescribeContainerGroupsRequest success")
 					m.Lock()
@@ -317,44 +337,44 @@ func DeployECI(
 		}
 	}()
 
-	// for _, worker := range w.Workers {
-	// 	wg.Add(1)
-	// 	go func(worker *qrpc.WorkerNetInfo) {
+	for _, worker := range w.Workers {
+		wg.Add(1)
+		go func(worker *qrpc.WorkerNetInfo) {
 
-	// 		defer wg.Done()
-	// 		client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.InternetIp), &http.Client{})
+			defer wg.Done()
+			client := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", worker.IntranetIp), proxyClient)
+			log.Info().Str("intranetIp", worker.IntranetIp).Msg("Init WorkerSlaveProtobufClient")
 
-	// 		for {
-	// 			resp, err := client.PutWorkersNetInfo(context.TODO(), &qrpc.WorkersNetInfo{
-	// 				ExpId:   w.ExpId,
-	// 				Workers: w.Workers,
-	// 				Proxy:   w.Proxy,
+			for {
+				resp, err := client.PutWorkersNetInfo(context.TODO(), &qrpc.WorkersNetInfo{
+					ExpId:   w.ExpId,
+					Workers: w.Workers,
+					Proxy:   w.Proxy,
 
-	// 				MasterUrl: fmt.Sprintf("http://%v:2412%d", masterIp, worker.NodeIndex),
-	// 				MasterId:  int64(worker.NodeIndex),
-	// 				SlaveId:   int64(worker.WorkerIndex),
-	// 			})
-	// 			if err != nil {
-	// 				log.Warn().Err(err).Msg("failed to call PutWorkersNetInfo")
-	// 				time.Sleep(time.Second * 3)
-	// 				continue
-	// 			}
-	// 			log.Info().Msgf("resp: %v", resp)
-	// 			break
-	// 		}
-	// 	}(worker)
-	// }
-	// wg.Wait()
-	for{
-		_, err := proxyClient.PutWorkersNetInfoPublic(context.TODO(), w)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to call PutWorkersNetInfoPublic")
-			time.Sleep(time.Second * 3)
-		}else{
-			break
-		}
+					MasterUrl: fmt.Sprintf("http://%v:2412%d", masterIp, worker.NodeIndex),
+					MasterId:  int64(worker.NodeIndex),
+					SlaveId:   int64(worker.WorkerIndex),
+				})
+				if err != nil {
+					log.Warn().Err(err).Msg("failed to call PutWorkersNetInfo")
+					time.Sleep(time.Second * 3)
+					continue
+				}
+				log.Info().Msgf("resp: %v", resp)
+				break
+			}
+		}(worker)
 	}
-
+	wg.Wait()
+	// for {
+	// 	_, err := proxyClient.PutWorkersNetInfoPublic(context.TODO(), w)
+	// 	if err != nil {
+	// 		log.Error().Err(err).Msg("failed to call PutWorkersNetInfoPublic")
+	// 		time.Sleep(time.Second * 3)
+	// 	} else {
+	// 		break
+	// 	}
+	// }
 
 	// write w to "../Docker/validators/eci.pb"
 	wBytes, err := proto.Marshal(w)
@@ -365,7 +385,7 @@ func DeployECI(
 		log.Fatal().Err(err).Msg("failed to write file")
 	}
 
-	return w
+	return w, proxyClient
 }
 
 type BuildCmd struct {
@@ -472,6 +492,33 @@ func (r *DeleteECICMD) Run() error {
 				log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
 			}
 			log.Info().Str("id", id).Msg("DeleteContainerGroupRequest success")
+		}
+
+		resp, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+			RegionId:           tea.String("cn-hangzhou"),
+			ContainerGroupName: tea.String(proxyContainerGroupName),
+		})
+		if err != nil {
+			log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
+		}
+		if len(resp.Body.ContainerGroups) > 0 {
+			// The time follows the RFC 3339 standard and must be in UTC
+			t := *resp.Body.ContainerGroups[0].CreationTime
+			createAt, err := time.Parse(time.RFC3339, t)
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to parse time")
+			}
+			if time.Since(createAt) > time.Minute*45 {
+				log.Info().Time("createAt", createAt).Msg("delete proxy container")
+				_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
+					ContainerGroupId: resp.Body.ContainerGroups[0].ContainerGroupId,
+					RegionId:         tea.String("cn-hangzhou"),
+				})
+				if err != nil {
+					log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+				}
+			}
+
 		}
 
 		time.Sleep(time.Second * 10)

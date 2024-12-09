@@ -28,7 +28,7 @@ func (c *Oss1CaseCMD) Run() error {
 
 	goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%v", expID), goutils.WithCwd("./assets/fc-worker"))
 
-	w := DeployECI(1, 1, make(chan struct{}), nil)
+	w,_ := DeployECI(1, 1, make(chan struct{}), nil)
 	log.Info().Interface("w", w).Msg("DeployECI")
 
 	c1InternetIp := w.Workers[0].InternetIp

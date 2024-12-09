@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
-	"net/http"
+	// "net/http"
 	"os"
 	"q/qrpc"
 	"time"
@@ -45,7 +45,7 @@ func Exp1RunOnce(param *Exp1Param) {
 	log.Info().Msg("Exp1CaseCMD")
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
-	w := DeployECI(param.N, 1, make(chan struct{}), &ECIParam{
+	w , proxyClient:= DeployECI(param.N, 1, make(chan struct{}), &ECIParam{
 		Bandwidth: 12.5,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
@@ -53,7 +53,7 @@ func Exp1RunOnce(param *Exp1Param) {
 	clients := make([]qrpc.WorkerSlave, 0)
 	time.Sleep(3 * time.Second)
 	for _, w := range w.Workers {
-		c := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.InternetIp), &http.Client{})
+		c := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
 		clients = append(clients, c)
 	}
 
