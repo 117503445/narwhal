@@ -3,6 +3,8 @@ package command
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	// "net/http"
 	"os"
 	"q/qrpc"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/117503445/goutils"
 	"github.com/rs/zerolog/log"
+
 	// "google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -44,7 +47,7 @@ func Exp1RunOnce(param *Exp1Param) {
 	log.Info().Msg("Exp1CaseCMD")
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
-	w, proxyClient := DeployECI(param.N, 1, make(chan struct{}), &ECIParam{
+	w, proxyClient := ECIDeploy(param.N, 1, make(chan struct{}), &ECIParam{
 		Bandwidth: 12.5,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
@@ -133,6 +136,9 @@ func Exp1RunOnce(param *Exp1Param) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to WriteJSON")
 	}
+
+	ECIDelete(w)
+
 	RefreshExpID()
 }
 
@@ -147,17 +153,25 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 	// for _, press := range []int{5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 48000, 49000, 50000, 51000, 52000} {
 	// for _, press := range []int{25000, 30000, 35000, 40000, 45000, 48000, 49000, 50000, 51000, 52000} {
-	for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
+
+	var wg sync.WaitGroup
+
+	// for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
+	for _, press := range []int{20000} {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			Exp1RunOnce(&Exp1Param{
 				Press: press,
-				Mode:  "p2p",
+				// Mode:  "p2p",
+				Mode:  "broadcast",
 				N:     4,
 			})
 		}()
 
 		time.Sleep(time.Minute)
 	}
+	wg.Wait()
 
 	return nil
 }

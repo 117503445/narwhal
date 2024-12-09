@@ -88,7 +88,20 @@ type ECIParam struct {
 	Bandwidth float64 // 带宽限制，单位 MB
 }
 
-func DeployECI(
+func ECIDelete(w *qrpc.WorkersNetInfo) {
+	for _, worker := range w.Workers {
+		_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
+			ContainerGroupId: tea.String(worker.EciId),
+			RegionId:         tea.String("cn-hangzhou"),
+		})
+		if err != nil {
+			log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+		}
+		log.Info().Str("id", worker.EciId).Msg("DeleteContainerGroupRequest success")
+	}
+}
+
+func ECIDeploy(
 	nodeCount int, workerCount int, stop chan struct{}, param *ECIParam,
 ) (*qrpc.WorkersNetInfo, *http.Client) {
 	if param == nil {
@@ -312,6 +325,7 @@ func DeployECI(
 						IntranetIp:  *intranetIp,
 						NodeIndex:   int64(meta.NodeID),
 						WorkerIndex: int64(meta.WorkerID),
+						EciId:       *result.Body.ContainerGroups[0].ContainerGroupId,
 					})
 					m.Unlock()
 					break
