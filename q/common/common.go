@@ -14,7 +14,7 @@ import (
 )
 
 // 放大 1000 倍
-const NarwhalTxN = 10000
+const NarwhalTxN = 100
 
 // SendTransactionToNarwhalWorker 向 Narwhal Worker 发送交易
 func SendTransactionToNarwhalWorker(client rpc.TransactionsClient, payload string, n int) error {

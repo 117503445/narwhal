@@ -36,7 +36,7 @@ func (*SendReqCmd) Run() error {
 		go func() {
 			defer wg.Done()
 			for {
-				common.SendTransactionToNarwhalWorker(client, "hello", 1)
+				common.SendTransactionToNarwhalWorker(client, "hello", 100)
 				time.Sleep(1 * time.Second)
 			}
 		}()

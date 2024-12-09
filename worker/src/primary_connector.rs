@@ -63,7 +63,7 @@ impl PrimaryConnector {
                         .worker_to_primary;
                         let address_clone = address.clone();
                         let handle = self.primary_client.send(address, &digest).await;
-                    tracing::info!("qht Sent {digest:?} to {address}", address = address_clone);
+                    // tracing::info!("qht Sent {digest:?} to {address}", address = address_clone);
 
                     // handle 是什么？handle 的类型是 CancelOnDropHandler<Result<tonic::Response<types::Empty>, eyre::Report>>
 
