@@ -26,6 +26,6 @@
     ],
     "figure": "batchsize 对 txpool 的影响",
     "latency": 37.153,
-    "line": "broadcast-txpool",
+    "line": "p2p-txpool",
     "tps": 50100.48213426589
 }

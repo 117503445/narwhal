@@ -93,19 +93,6 @@ func Exp1RunOnce(param *Exp1Param) {
 			oldLatencyList = append(oldLatencyList, latency)
 		}
 
-		// 如果 tps 和 延迟 相比前 2 次的变化都小于 5%，则认为已经收敛
-		// if len(oldTpsList) > 3 && len(oldLatencyList) > 3 {
-		// 	// 第 index 个值相比最后一个值的变化
-		// 	getTpsChange := func(index int) float64 {
-		// 		return (oldTpsList[index] - oldTpsList[len(oldTpsList)-1]) / oldTpsList[len(oldTpsList)-1]
-		// 	}
-		// 	getLatencyChange := func(index int) float64 {
-		// 		return (oldLatencyList[index] - oldLatencyList[len(oldLatencyList)-1]) / oldLatencyList[len(oldLatencyList)-1]
-		// 	}
-		// 	if getTpsChange(len(oldTpsList)-2) < 0.05 && getTpsChange(len(oldTpsList)-3) < 0.05 && getLatencyChange(len(oldLatencyList)-2) < 0.05 && getLatencyChange(len(oldLatencyList)-3) < 0.05 {
-		// 		break
-		// 	}
-		// }
 		if len(oldTpsList) > 5 {
 			getTpsChange := func(index int) float64 {
 				return (oldTpsList[index] - oldTpsList[len(oldTpsList)-1]) / oldTpsList[len(oldTpsList)-1]
