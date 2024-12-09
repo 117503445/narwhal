@@ -41,11 +41,10 @@ func Exp1RunOnce(param *Exp1Param) {
 
 	goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-proxy:%v", expID), goutils.WithCwd("./assets/fc-proxy"))
 
-
 	log.Info().Msg("Exp1CaseCMD")
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
-	w , proxyClient:= DeployECI(param.N, 1, make(chan struct{}), &ECIParam{
+	w, proxyClient := DeployECI(param.N, 1, make(chan struct{}), &ECIParam{
 		Bandwidth: 12.5,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
@@ -146,12 +145,18 @@ func (cmd *Exp1CaseCMD) Run() error {
 	// 	})
 	// }
 
-	for _, press := range []int{1000000} {
-		Exp1RunOnce(&Exp1Param{
-			Press: press,
-			Mode:  "p2p",
-			N:     4,
-		})
+	// for _, press := range []int{5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 48000, 49000, 50000, 51000, 52000} {
+	// for _, press := range []int{25000, 30000, 35000, 40000, 45000, 48000, 49000, 50000, 51000, 52000} {
+	for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
+		go func() {
+			Exp1RunOnce(&Exp1Param{
+				Press: press,
+				Mode:  "p2p",
+				N:     4,
+			})
+		}()
+
+		time.Sleep(time.Minute)
 	}
 
 	return nil

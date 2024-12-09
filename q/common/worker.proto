@@ -42,6 +42,8 @@ service WorkerSlave {
   rpc Exp1P2PGetBatchStatus(Exp1P2PGetBatchStatusRequest) returns (Exp1P2PGetBatchStatusResponse);
   rpc Exp1P2PRecvBatch(ExpBatch) returns (google.protobuf.Empty);
   rpc Exp1GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
+
+  rpc ProxyRefresh(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message ExpStartRequest{

@@ -5,7 +5,14 @@ tasks:
     desc: "The default task"
     dir: q
     cmds:
+      - go-task exp-1
+
+  build:
+    desc: "Build"
+    dir: q
+    cmds:
       - go run . build
+
   send-req:
     desc: "send-req"
     dir: Docker

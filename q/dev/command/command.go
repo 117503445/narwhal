@@ -17,6 +17,7 @@ import (
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"q/common"
 	"q/qrpc"
@@ -175,8 +176,14 @@ func DeployECI(
 		// visit baidu.com to test proxy
 		_, err = client.Get("http://www.baidu.com")
 		if err != nil {
-			log.Error().Err(err).Msg("failed to test proxy")
+			log.Warn().Err(err).Msg("failed to test proxy")
 			return nil
+		}
+
+		pClient := qrpc.NewWorkerSlaveProtobufClient("http://localhost:9000", client)
+		_, err = pClient.ProxyRefresh(context.Background(), &emptypb.Empty{})
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to call ProxyRefresh")
 		}
 
 		return client
@@ -498,35 +505,35 @@ func (r *DeleteECICMD) Run() error {
 			log.Info().Str("id", id).Msg("DeleteContainerGroupRequest success")
 		}
 
-		resp, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
-			RegionId:           tea.String("cn-hangzhou"),
-			ContainerGroupName: tea.String(proxyContainerGroupName),
-		})
-		if err != nil {
-			log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
-		}
-		if len(resp.Body.ContainerGroups) > 0 {
-			// The time follows the RFC 3339 standard and must be in UTC
-			t := *resp.Body.ContainerGroups[0].CreationTime
-			createAt, err := time.Parse(time.RFC3339, t)
-			if err != nil {
-				log.Fatal().Err(err).Msg("failed to parse time")
-			}
-			if time.Since(createAt) > time.Minute*15 {
-				log.Info().Time("createAt", createAt).Msg("delete proxy container")
-				_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
-					ContainerGroupId: resp.Body.ContainerGroups[0].ContainerGroupId,
-					RegionId:         tea.String("cn-hangzhou"),
-				})
-				if err != nil {
-					log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
-				}
-			} else {
-				log.Info().Time("createAt", createAt).Dur("dur", time.Since(createAt)).Msg("proxy container exists")
-			}
-		} else {
-			log.Info().Msg("proxy container not exists")
-		}
+		// resp, err := common.EciClient.DescribeContainerGroups(&eci20180808.DescribeContainerGroupsRequest{
+		// 	RegionId:           tea.String("cn-hangzhou"),
+		// 	ContainerGroupName: tea.String(proxyContainerGroupName),
+		// })
+		// if err != nil {
+		// 	log.Fatal().Err(err).Msg("DescribeContainerGroupsRequest failed")
+		// }
+		// if len(resp.Body.ContainerGroups) > 0 {
+		// 	// The time follows the RFC 3339 standard and must be in UTC
+		// 	t := *resp.Body.ContainerGroups[0].CreationTime
+		// 	createAt, err := time.Parse(time.RFC3339, t)
+		// 	if err != nil {
+		// 		log.Fatal().Err(err).Msg("failed to parse time")
+		// 	}
+		// 	if time.Since(createAt) > time.Minute*15 {
+		// 		log.Info().Time("createAt", createAt).Msg("delete proxy container")
+		// 		_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
+		// 			ContainerGroupId: resp.Body.ContainerGroups[0].ContainerGroupId,
+		// 			RegionId:         tea.String("cn-hangzhou"),
+		// 		})
+		// 		if err != nil {
+		// 			log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+		// 		}
+		// 	} else {
+		// 		log.Info().Time("createAt", createAt).Dur("dur", time.Since(createAt)).Msg("proxy container exists")
+		// 	}
+		// } else {
+		// 	log.Info().Msg("proxy container not exists")
+		// }
 
 		time.Sleep(time.Second * 10)
 	}

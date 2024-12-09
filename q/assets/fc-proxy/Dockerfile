@@ -3,4 +3,6 @@ FROM registry.cn-hangzhou.aliyuncs.com/117503445-mirror/sync:linux.amd64.ghcr.io
 COPY config.jsonc /etc/sing-box/config.json
 
 # /var/lib/sing-box -C /etc/sing-box/ run
-CMD ["-D", "/var/lib/sing-box", "-C", "/etc/sing-box/", "run"]
+# CMD ["-D", "/var/lib/sing-box", "-C", "/etc/sing-box/", "run"]
+COPY fc-proxy /fc-proxy
+ENTRYPOINT ["/fc-proxy"]

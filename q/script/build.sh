@@ -6,3 +6,6 @@ CGO_ENABLED=0 go build -buildvcs=false -o /workspace/q/q .
 cd /workspace/q/assets/fc-worker
 cp /workspace/Docker/validators/fc-urls.json .
 CGO_ENABLED=0 go build -buildvcs=false -o fc-worker .
+
+cd /workspace/q/assets/fc-proxy
+CGO_ENABLED=0 go build -buildvcs=false -o fc-proxy .
