@@ -95,7 +95,7 @@ func ECIDelete(w *qrpc.WorkersNetInfo) {
 			RegionId:         tea.String("cn-hangzhou"),
 		})
 		if err != nil {
-			log.Fatal().Err(err).Msg("DeleteContainerGroupRequest failed")
+			log.Warn().Err(err).Msg("DeleteContainerGroupRequest failed")
 		}
 		log.Info().Str("id", worker.EciId).Msg("DeleteContainerGroupRequest success")
 	}

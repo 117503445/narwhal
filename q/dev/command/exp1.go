@@ -52,21 +52,26 @@ func Exp1RunOnce(param *Exp1Param) {
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
 
-	clients := make([]qrpc.WorkerSlave, 0)
+	var client0 qrpc.WorkerSlave
+	// clients := make([]qrpc.WorkerSlave, 0)
 	time.Sleep(3 * time.Second)
 	for _, w := range w.Workers {
-		c := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
-		clients = append(clients, c)
+		// c := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
+		// clients = append(clients, c)
+		if w.NodeIndex == 0 {
+			client0 = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
+			break
+		}
 	}
 
 	if param.Mode == "broadcast" {
-		_, err = clients[0].Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
+		_, err = client0.Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
 			Ak:    os.Getenv("ak"),
 			Sk:    os.Getenv("sk"),
 			Press: int64(param.Press),
 		})
 	} else {
-		_, err = clients[0].Exp1P2PStart(context.Background(), &qrpc.ExpStartRequest{
+		_, err = client0.Exp1P2PStart(context.Background(), &qrpc.ExpStartRequest{
 			Ak:    os.Getenv("ak"),
 			Sk:    os.Getenv("sk"),
 			Press: int64(param.Press),
@@ -82,7 +87,7 @@ func Exp1RunOnce(param *Exp1Param) {
 
 	for {
 		log.Info().Msg("Exp1GetMetrics")
-		metrics, err := clients[0].Exp1GetMetrics(context.Background(), &emptypb.Empty{})
+		metrics, err := client0.Exp1GetMetrics(context.Background(), &emptypb.Empty{})
 		if err != nil {
 			log.Error().Err(err).Msg("failed to call Exp1GetMetrics")
 			continue
@@ -158,8 +163,8 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 	pressList := []int{100000}
 	n := 16
-	mode := "broadcast"
-	// mode := "p2p"
+	// mode := "broadcast"
+	mode := "p2p"
 
 	// for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
 	// for _, press := range []int{30000, 35000, 40000, 45000} {
