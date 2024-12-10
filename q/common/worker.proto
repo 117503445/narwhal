@@ -54,10 +54,12 @@ message ExpStartRequest{
 
 message Exp1P2PGetBatchStatusRequest{
   string id = 1;
+  string worker = 2;
 }
 
 message Exp1P2PGetBatchStatusResponse{
   string status = 1; // "give-me" "other-giving" "done"
+  string givingWorker = 2;
 }
 
 message ExpBatch{

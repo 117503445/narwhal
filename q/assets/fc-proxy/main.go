@@ -21,6 +21,7 @@ var LastRefreshTime time.Time = time.Now()
 
 func (s *Server) ProxyRefresh(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
 	LastRefreshTime = time.Now()
+	log.Info().Msg("ProxyRefresh")
 	return &emptypb.Empty{}, nil
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"math/rand/v2"
 	"sync"
 	"time"
@@ -141,13 +142,13 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 							Exp1AddLatency(latency)
 						}
 
-						resp, err := s.otherClients[i].Exp1P2PGetBatchStatus(context.Background(), &qrpc.Exp1P2PGetBatchStatusRequest{Id: batchID})
+						resp, err := s.otherClients[i].Exp1P2PGetBatchStatus(context.Background(), &qrpc.Exp1P2PGetBatchStatusRequest{Id: batchID, Worker: fmt.Sprintf("%v", s.masterId)})
 						if err != nil {
 							log.Fatal().Err(err).Msg("Exp1P2PGetBatchStatus")
 						}
 						// "give-me" "other-giving" "done"
 						if resp.Status == "done" || resp.Status == "other-giving" {
-							log.Info().Int("pid", pid).Str("batchID", batchID).Str("status", resp.Status).Msg("skip")
+							log.Info().Int("pid", pid).Str("batchID", batchID).Str("status", resp.Status).Str("GivingWorker", resp.GivingWorker).Msg("skip")
 							skipCount++
 							continue
 						} else if resp.Status == "give-me" {
@@ -200,7 +201,7 @@ func (s *Server) Exp1P2PRecvBatch(ctx context.Context, batch *qrpc.ExpBatch) (*e
 					randIndex[i], randIndex[j] = randIndex[j], randIndex[i]
 				})
 				for _, i := range randIndex {
-					resp, err := s.otherClients[i].Exp1P2PGetBatchStatus(context.Background(), &qrpc.Exp1P2PGetBatchStatusRequest{Id: batch.Id})
+					resp, err := s.otherClients[i].Exp1P2PGetBatchStatus(context.Background(), &qrpc.Exp1P2PGetBatchStatusRequest{Id: batch.Id, Worker: fmt.Sprintf("%v", s.masterId)})
 					if err != nil {
 						log.Fatal().Err(err).Msg("Exp1P2PGetBatchStatus")
 					}
@@ -232,10 +233,12 @@ func (s *Server) Exp1P2PGetBatchStatus(ctx context.Context, req *qrpc.Exp1P2PGet
 
 	if _, ok := exp1BatchStorageStatus[req.Id]; ok {
 		return &qrpc.Exp1P2PGetBatchStatusResponse{
-			Status: "other-giving",
+			Status:       "other-giving",
+			GivingWorker: exp1BatchStorageWorker[req.Id],
 		}, nil
 	} else {
 		exp1BatchStorageStatus[req.Id] = "receiving"
+		exp1BatchStorageWorker[req.Id] = req.Worker
 		return &qrpc.Exp1P2PGetBatchStatusResponse{
 			Status: "give-me",
 		}, nil
@@ -262,6 +265,7 @@ var exp1BatchCreatedLock sync.Mutex
 
 // batch id -> "receiving", "received"
 var exp1BatchStorageStatus map[string]string = make(map[string]string, 0)
+var exp1BatchStorageWorker map[string]string = make(map[string]string, 0)
 var exp1BatchStorageLock sync.RWMutex
 
 var isMaster bool
