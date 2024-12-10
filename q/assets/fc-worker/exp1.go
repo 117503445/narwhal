@@ -107,6 +107,7 @@ func (s *Server) Exp1BoradcastRecvBatch(ctx context.Context, batch *qrpc.ExpBatc
 
 func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*emptypb.Empty, error) {
 	Exp1SetIsMaster(true)
+	log.Debug().Int("num", len(s.otherClients)).Msg("Exp1P2PStart")
 
 	go func() {
 		// var err error
@@ -129,6 +130,10 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 					rand.Shuffle(len(randIndex), func(i, j int) {
 						randIndex[i], randIndex[j] = randIndex[j], randIndex[i]
 					})
+					log.Debug().Ints("randIndex", randIndex).Msg("randIndex")
+
+					sendCount := 0
+					skipCount := 0
 
 					for count, i := range randIndex {
 						if count == BFTQuorumSize(len(s.otherClients)+1)-1 {
@@ -143,9 +148,9 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 						// "give-me" "other-giving" "done"
 						if resp.Status == "done" || resp.Status == "other-giving" {
 							log.Info().Int("pid", pid).Str("batchID", batchID).Str("status", resp.Status).Msg("skip")
+							skipCount++
 							continue
-						}
-						if resp.Status == "give-me" {
+						} else if resp.Status == "give-me" {
 							_, err = s.otherClients[i].Exp1P2PRecvBatch(context.Background(), &qrpc.ExpBatch{
 								Id:      batchID,
 								Payload: payload,
@@ -154,7 +159,10 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 							if err != nil {
 								log.Fatal().Err(err).Msg("Exp1P2PRecvBatch")
 							}
+							sendCount++
 							log.Info().Int("pid", pid).Str("batchID", batchID).Msg("sending batch to one client success")
+						} else {
+							log.Fatal().Str("status", resp.Status).Msg("unknown status")
 						}
 					}
 
@@ -162,6 +170,7 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 						SubmittedAt: timestamppb.Now(),
 						TxNum:       int64(Exp1BatchSize),
 					})
+					log.Info().Str("batchID", batchID).Int("pid", pid).Int("sendCount", sendCount).Int("skipCount", skipCount).Msg("sending batch done")
 
 					// log.Info().Msg("sending batch to one client success")
 				}
@@ -174,7 +183,7 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 }
 
 func (s *Server) Exp1P2PRecvBatch(ctx context.Context, batch *qrpc.ExpBatch) (*emptypb.Empty, error) {
-	log.Info().Msg("Recv Exp1P2PRecvBatch")
+	log.Info().Str("batchID", batch.Id).Msg("Recv Exp1P2PRecvBatch")
 
 	exp1BatchStorageLock.Lock()
 	defer exp1BatchStorageLock.Unlock()
@@ -223,7 +232,7 @@ func (s *Server) Exp1P2PGetBatchStatus(ctx context.Context, req *qrpc.Exp1P2PGet
 
 	if _, ok := exp1BatchStorageStatus[req.Id]; ok {
 		return &qrpc.Exp1P2PGetBatchStatusResponse{
-			Status: "receiving",
+			Status: "other-giving",
 		}, nil
 	} else {
 		exp1BatchStorageStatus[req.Id] = "receiving"
@@ -240,7 +249,9 @@ func (s *Server) Exp1GetMetrics(ctx context.Context, req *emptypb.Empty) (*qrpc.
 }
 
 func BFTQuorumSize(n int) int {
-	return n*2/3 + 1
+	b := n*2/3 + 1
+	// log.Info().Int("n", n).Int("b", b).Msg("BFTQuorumSize")
+	return b
 }
 
 var exp1Metrics = &qrpc.Exp1Metrics{}

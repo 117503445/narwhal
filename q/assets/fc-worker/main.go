@@ -119,8 +119,10 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 				continue
 			}
 			s.otherClients = append(s.otherClients, client)
+			log.Debug().Int("nodeID", nodeID).Msg("add otherClients")
 		}
 	}
+	log.Info().Int("n", len(s.otherClients)).Msg("otherClients")
 
 	return &emptypb.Empty{}, nil
 }
