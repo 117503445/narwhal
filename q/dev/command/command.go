@@ -219,8 +219,8 @@ func ECIDeploy(
 			Memory:          tea.Float32(0.5),
 			SpotStrategy:    tea.String("SpotAsPriceGo"),
 			AutoCreateEip:   tea.Bool(true),
-			SecurityGroupId: tea.String("sg-bp1chrrv37a1jm22u1v8"),
-			VSwitchId:       tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
+			SecurityGroupId: tea.String("sg-bp1c2remwvj2rpef5upy"),
+			VSwitchId:       tea.String("vsw-bp1f2g1unvama51zc04cd"),
 		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
@@ -258,12 +258,12 @@ func ECIDeploy(
 				},
 			},
 			RestartPolicy:    tea.String("Never"),
-			Cpu:              tea.Float32(2),
-			Memory:           tea.Float32(2),
+			Cpu:              tea.Float32(0.25),
+			Memory:           tea.Float32(0.5),
 			SpotStrategy:     tea.String("SpotAsPriceGo"),
 			AutoCreateEip:    tea.Bool(false),
-			SecurityGroupId:  tea.String("sg-bp1chrrv37a1jm22u1v8"),
-			VSwitchId:        tea.String("vsw-bp1x16k8zehbf4rsicd0k"),
+			SecurityGroupId:  tea.String("sg-bp1c2remwvj2rpef5upy"),
+			VSwitchId:        tea.String("vsw-bp1f2g1unvama51zc04cd"),
 			IngressBandwidth: tea.Int64(bandwidth),
 			EgressBandwidth:  tea.Int64(bandwidth),
 		})
