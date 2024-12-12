@@ -162,11 +162,11 @@ func (cmd *Exp1CaseCMD) Run() error {
 	var wg sync.WaitGroup
 
 	// pressList := []int{1000, 1000000}
-	pressList := []int{1000000}
-	// nList := []int{4, 8, 16, 32, 64}
-	nList := []int{128}
-	// modeList := []string{"broadcast", "p2p"}
-	modeList := []string{"p2p"}
+	pressList := []int{1000, 1000000}
+	nList := []int{4, 8, 16, 32, 64}
+	// nList := []int{128}
+	modeList := []string{"broadcast", "p2p"}
+	// modeList := []string{"p2p"}
 	// mode := "p2p"
 
 	// for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
@@ -174,17 +174,17 @@ func (cmd *Exp1CaseCMD) Run() error {
 	for _, press := range pressList {
 		for _, mode := range modeList {
 			for _, n := range nList {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					Exp1RunOnce(&Exp1Param{
-						Press: press,
-						// Mode:  "p2p",
-						Mode: mode,
-						N:    n,
-					})
-				}()
-				time.Sleep(time.Minute)
+				// wg.Add(1)
+				// go func() {
+				// defer wg.Done()
+				Exp1RunOnce(&Exp1Param{
+					Press: press,
+					// Mode:  "p2p",
+					Mode: mode,
+					N:    n,
+				})
+				// }()
+				// time.Sleep(time.Minute)
 			}
 		}
 
