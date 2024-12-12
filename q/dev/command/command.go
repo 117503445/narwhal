@@ -90,6 +90,7 @@ type ECIParam struct {
 }
 
 func ECIDelete(w *qrpc.WorkersNetInfo) {
+	log.Info().Msg("ECIDelete")
 	for _, worker := range w.Workers {
 		_, err := common.EciClient.DeleteContainerGroup(&eci20180808.DeleteContainerGroupRequest{
 			ContainerGroupId: tea.String(worker.EciId),
@@ -98,7 +99,7 @@ func ECIDelete(w *qrpc.WorkersNetInfo) {
 		if err != nil {
 			log.Warn().Err(err).Msg("DeleteContainerGroupRequest failed")
 		}
-		log.Info().Str("id", worker.EciId).Msg("DeleteContainerGroupRequest success")
+		// log.Info().Str("id", worker.EciId).Msg("DeleteContainerGroupRequest success")
 	}
 }
 
@@ -384,7 +385,7 @@ func ECIDeploy(
 					SlaveId:   int64(worker.WorkerIndex),
 				})
 				if err != nil {
-					log.Warn().Err(err).Msg("failed to call PutWorkersNetInfo")
+					log.Warn().Err(err).Int("nodeIndex", int(worker.NodeIndex)).Int("workerIndex", int(worker.WorkerIndex)).Msg("failed to call PutWorkersNetInfo")
 					time.Sleep(time.Second * 3)
 					continue
 				}

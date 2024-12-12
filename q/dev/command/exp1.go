@@ -162,10 +162,10 @@ func (cmd *Exp1CaseCMD) Run() error {
 	var wg sync.WaitGroup
 
 	// pressList := []int{1000, 1000000}
-	pressList := []int{1000000}
-	nList := []int{4, 8, 16, 32, 64}
-	// nList := []int{128}
-	modeList := []string{ "p2p"}
+	pressList := []int{1000}
+	// nList := []int{4, 8, 16, 32, 64}
+	nList := []int{64}
+	modeList := []string{ "broadcast"}
 	// modeList := []string{"p2p", "broadcast"}
 	// mode := "p2p"
 
