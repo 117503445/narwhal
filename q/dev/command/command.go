@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	// "strings"
 	"sync"
@@ -291,14 +292,14 @@ func ECIDeploy(
 					if result.Body != nil && result.Body.Content != nil {
 						goutils.WriteText(fmt.Sprintf("%s/%s/%s-%d-%d.log", dirLogs, expID, containerGroupName, meta.NodeID, meta.WorkerID), *result.Body.Content)
 					}
-					if nodeCount < 32{
+					if nodeCount < 32 {
 						time.Sleep(time.Second * 10)
 					} else if nodeCount < 64 {
 						time.Sleep(time.Second * 20)
 					} else {
 						time.Sleep(time.Second * 30)
 					}
-					
+
 				}
 			}
 		}(cStop)
@@ -505,9 +506,9 @@ func (r *DeleteECICMD) Run() error {
 		// result.Body.ContainerGroups
 		for _, containerGroup := range result.Body.ContainerGroups {
 			log.Info().Interface("containerGroup", containerGroup.ContainerGroupId).Msg("containerGroup")
-			// if strings.Contains(*containerGroup.ContainerGroupName, "proxy") {
-			// 	continue
-			// }
+			if strings.Contains(*containerGroup.ContainerGroupName, "proxy") {
+				continue
+			}
 
 			ids = append(ids, *containerGroup.ContainerGroupId)
 		}
