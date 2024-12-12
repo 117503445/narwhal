@@ -167,7 +167,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 	pressList := []int{1000}
 	nList := []int{4, 8, 16, 32, 64}
 	// nList := []int{64}
-	modeList := []string{ "broadcast"}
+	modeList := []string{ "p2p"}
 	// modeList := []string{"p2p", "broadcast"}
 	// mode := "p2p"
 	latencyMock := true
