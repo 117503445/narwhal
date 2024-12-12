@@ -103,6 +103,8 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 func (s *Server) Exp1BoradcastRecvBatch(ctx context.Context, batch *qrpc.ExpBatch) (*emptypb.Empty, error) {
 	log.Info().Msg("Recv Exp1BoradcastRecvBatch")
 
+	sleepForLatencyMock()
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -221,6 +223,8 @@ func (s *Server) Exp1P2PRecvBatch(ctx context.Context, batch *qrpc.ExpBatch) (*e
 	} else {
 		log.Warn().Str("batchID", batch.Id).Msg("batch not exist")
 	}
+
+	sleepForLatencyMock()
 
 	return &emptypb.Empty{}, nil
 }

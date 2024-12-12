@@ -24,6 +24,7 @@ type Exp1Param struct {
 	Press int
 	Mode  string // broadcast or p2p
 	N     int
+	LatencyMock bool
 }
 
 func Exp1RunOnce(param *Exp1Param) {
@@ -49,6 +50,7 @@ func Exp1RunOnce(param *Exp1Param) {
 	// 80000 交易 * 512B/交易 * 3 = 120MB
 	w, proxyClient := ECIDeploy(param.N, 1, make(chan struct{}), &ECIParam{
 		Bandwidth: 12.5,
+		LatencyMock: param.LatencyMock,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
 
@@ -163,11 +165,12 @@ func (cmd *Exp1CaseCMD) Run() error {
 
 	// pressList := []int{1000, 1000000}
 	pressList := []int{1000}
-	// nList := []int{4, 8, 16, 32, 64}
-	nList := []int{64}
+	nList := []int{4, 8, 16, 32, 64}
+	// nList := []int{64}
 	modeList := []string{ "broadcast"}
 	// modeList := []string{"p2p", "broadcast"}
 	// mode := "p2p"
+	latencyMock := true
 
 	// for _, press := range []int{52000, 53000, 54000, 55000, 56000} {
 	// for _, press := range []int{30000, 35000, 40000, 45000} {
@@ -182,6 +185,7 @@ func (cmd *Exp1CaseCMD) Run() error {
 					// Mode:  "p2p",
 					Mode: mode,
 					N:    n,
+					LatencyMock: latencyMock,
 				})
 				// }()
 				// time.Sleep(time.Minute)

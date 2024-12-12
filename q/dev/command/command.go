@@ -86,7 +86,8 @@ func RefreshExpID() {
 }
 
 type ECIParam struct {
-	Bandwidth float64 // 带宽限制，单位 MB
+	Bandwidth   float64 // 带宽限制，单位 MB
+	LatencyMock bool
 }
 
 func ECIDelete(w *qrpc.WorkersNetInfo) {
@@ -242,21 +243,31 @@ func ECIDeploy(
 
 	stops := make([]chan struct{}, 0)
 
+	// LatencyMock
+
 	createContainer := func(meta *ECIMeta) {
+		envs := []*eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
+			{
+				Key:   tea.String("SLAVE_ID"),
+				Value: tea.String(fmt.Sprintf("%d", meta.WorkerID)),
+			},
+		}
+		if param.LatencyMock {
+			envs = append(envs, &eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
+				Key:   tea.String("LATENCY_MOCK"),
+				Value: tea.String("1"),
+			})
+		}
+
 		containerGroupName := fmt.Sprintf("biye-%d-%d-%s", meta.NodeID, meta.WorkerID, expID)
 		result, err := common.EciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{
 			RegionId:           tea.String("cn-hangzhou"),
 			ContainerGroupName: tea.String(containerGroupName),
 			Container: []*eci20180808.CreateContainerGroupRequestContainer{
 				{
-					Name:  tea.String("worker"),
-					Image: tea.String(fmt.Sprintf("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%s", expID)),
-					EnvironmentVar: []*eci20180808.CreateContainerGroupRequestContainerEnvironmentVar{
-						{
-							Key:   tea.String("SLAVE_ID"),
-							Value: tea.String(fmt.Sprintf("%d", meta.WorkerID)),
-						},
-					},
+					Name:           tea.String("worker"),
+					Image:          tea.String(fmt.Sprintf("registry.cn-hangzhou.aliyuncs.com/117503445/biye-slave:%s", expID)),
+					EnvironmentVar: envs,
 				},
 			},
 			RestartPolicy:    tea.String("Never"),

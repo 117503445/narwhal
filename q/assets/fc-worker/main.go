@@ -30,6 +30,8 @@ import (
 //go:embed fc-urls.json
 var urlMapJSON string
 
+var LatencyMock bool
+
 type URLMap struct {
 	URLs map[string][]string `json:"urls"`
 }
@@ -252,6 +254,9 @@ var isProxy bool
 func NewServer() *Server {
 	log.Info().Msg("NewServer")
 	var err error
+
+	LatencyMock = os.Getenv("LATENCY_MOCK") != ""
+	log.Info().Bool("LatencyMock", LatencyMock).Msg("NewServer")
 
 	go func() {
 		lastActiveTime = time.Now()
