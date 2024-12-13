@@ -31,15 +31,18 @@ func runExp1() {
 func runExp2() {
 	pressList := []int{1000, 1000000}
 	nList := []int{4, 8, 16, 32, 64}
+	eciNumList := []int{1}
 
 	for _, press := range pressList {
 		for _, n := range nList {
-			Exp2RunOnce(&Exp2Param{
-				Press:       press,
-				N:           n,
-				EciNum:      1,
-				LatencyMock: false,
-			})
+			for _, eciNum := range eciNumList {
+				Exp2RunOnce(&Exp2Param{
+					Press:       press,
+					N:           n,
+					EciNum:      eciNum,
+					LatencyMock: false,
+				})
+			}
 		}
 	}
 }
