@@ -60,7 +60,7 @@ message ExpStartRequest{
 
 message Exp2StartRequest{
   int64 press = 1;
-  map<int64, string> workers = 2; // key 是 workers 的 NodeID, value 不重要
+  // map<int64, string> workers = 2; // key 是 workers 的 NodeID, value 不重要
 }
 
 message Exp1P2PGetBatchStatusRequest{
@@ -146,6 +146,8 @@ message WorkersNetInfo {
   string master_url = 4;
   int64 master_id = 5;
   int64 slave_id = 6;
+
+  map<int64, string> exp2workers = 7; // key 是 workers 的 NodeID, value 不重要
 }
 
 message WorkerNetInfo {

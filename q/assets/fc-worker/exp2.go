@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"time"
 
 	"q/qrpc"
 
@@ -25,53 +24,33 @@ var Exp2NodeClient []qrpc.WorkerSlave = []qrpc.WorkerSlave{}
 func (s *Server) Exp2Start(ctx context.Context, req *qrpc.Exp2StartRequest) (*emptypb.Empty, error) {
 	log.Info().Msg("Exp2Start")
 
-	time.Sleep(10 * time.Second)
+	go func() {
 
-	if s.masterId == 0 {
-		Exp2NodeType = "primary"
-	} else {
-		if _, ok := req.Workers[int64(s.masterId)]; ok {
-			Exp2NodeType = "worker"
-		} else {
-			Exp2NodeType = "node"
-		}
-	}
-	log.Info().Str("Exp2NodeType", Exp2NodeType).Msg("Exp2Start")
+		if Exp2NodeType == "primary" {
+			// start batch production
+			Exp1ProduceBatch(int(req.Press))
+			go func() {
+				nextWorkerIndex := 0
 
-	for nodeID, workers := range s.clients {
-		if _, ok := req.Workers[int64(nodeID)]; ok {
-			Exp2WorkerClient = append(Exp2WorkerClient, workers[0])
-		} else {
-			if nodeID != 0 {
-				Exp2NodeClient = append(Exp2NodeClient, workers[0])
-			}
-		}
-	}
+				for batchID := range batchesChan {
+					nextWorkerIndex = (nextWorkerIndex + 1) % len(Exp2WorkerClient)
+					workerClient := Exp2WorkerClient[nextWorkerIndex]
 
-	if Exp2NodeType == "primary" {
-		// start batch production
-		Exp1ProduceBatch(int(req.Press))
-		go func() {
-			nextWorkerIndex := 0
+					log.Info().Str("batchID", batchID).Int("WorkerIndex", int(nextWorkerIndex)).Msg("send batch to worker")
+					payload := make([]byte, Exp1TxSize*Exp1BatchSize)
 
-			for batchID := range batchesChan {
-				nextWorkerIndex = (nextWorkerIndex + 1) % len(Exp2WorkerClient)
-				workerClient := Exp2WorkerClient[nextWorkerIndex]
-
-				log.Info().Str("batchID", batchID).Int("WorkerIndex", int(nextWorkerIndex)).Msg("send batch to worker")
-				payload := make([]byte, Exp1TxSize*Exp1BatchSize)
-
-				_, err := workerClient.Exp2WorkerRecvBatch(context.Background(), &qrpc.ExpBatch{
-					Id:      batchID,
-					Payload: payload,
-					TxNum:   int64(Exp1BatchSize),
-				})
-				if err != nil {
-					log.Error().Err(err).Msg("Exp2WorkerRecvBatch failed")
+					_, err := workerClient.Exp2WorkerRecvBatch(context.Background(), &qrpc.ExpBatch{
+						Id:      batchID,
+						Payload: payload,
+						TxNum:   int64(Exp1BatchSize),
+					})
+					if err != nil {
+						log.Error().Err(err).Msg("Exp2WorkerRecvBatch failed")
+					}
 				}
-			}
-		}()
-	}
+			}()
+		}
+	}()
 
 	return &emptypb.Empty{}, nil
 }

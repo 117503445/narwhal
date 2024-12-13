@@ -126,6 +126,27 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 	}
 	log.Info().Int("n", len(s.otherClients)).Msg("otherClients")
 
+	if s.masterId == 0 {
+		Exp2NodeType = "primary"
+	} else {
+		if _, ok := in.Exp2Workers[int64(s.masterId)]; ok {
+			Exp2NodeType = "worker"
+		} else {
+			Exp2NodeType = "node"
+		}
+	}
+	log.Info().Str("Exp2NodeType", Exp2NodeType).Msg("Exp2NodeType")
+
+	for nodeID, workers := range s.clients {
+		if _, ok := in.Exp2Workers[int64(nodeID)]; ok {
+			Exp2WorkerClient = append(Exp2WorkerClient, workers[0])
+		} else {
+			if nodeID != 0 {
+				Exp2NodeClient = append(Exp2NodeClient, workers[0])
+			}
+		}
+	}
+
 	return &emptypb.Empty{}, nil
 }
 

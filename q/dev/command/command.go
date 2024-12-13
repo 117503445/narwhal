@@ -86,8 +86,9 @@ func RefreshExpID() {
 }
 
 type ECIParam struct {
-	Bandwidth   float64 // 带宽限制，单位 MB
-	LatencyMock bool
+	Bandwidth          float64 // 带宽限制，单位 MB
+	LatencyMock        bool
+	Exp2WorkerIndexMap map[int64]string
 }
 
 func ECIDelete(w *qrpc.WorkersNetInfo) {
@@ -112,6 +113,10 @@ func ECIDeploy(
 			Bandwidth: 125,
 		}
 	}
+	if param.Exp2WorkerIndexMap == nil {
+		param.Exp2WorkerIndexMap = make(map[int64]string, 0)
+	}
+
 	// 以 Byte per second 为单位
 	bandwidth := int64(param.Bandwidth * 1024 * 1024)
 
@@ -260,7 +265,7 @@ func ECIDeploy(
 		}
 
 		containerGroupName := fmt.Sprintf("biye-%d-%d-%s", meta.NodeID, meta.WorkerID, expID)
-		result, err := common.EciClient.CreateContainerGroup(&eci20180808.CreateContainerGroupRequest{
+		createContainerGroupRequest := &eci20180808.CreateContainerGroupRequest{
 			RegionId:           tea.String("cn-hangzhou"),
 			ContainerGroupName: tea.String(containerGroupName),
 			Container: []*eci20180808.CreateContainerGroupRequestContainer{
@@ -270,16 +275,25 @@ func ECIDeploy(
 					EnvironmentVar: envs,
 				},
 			},
-			RestartPolicy:    tea.String("Never"),
-			Cpu:              tea.Float32(0.25),
-			Memory:           tea.Float32(0.5),
-			SpotStrategy:     tea.String("SpotAsPriceGo"),
-			AutoCreateEip:    tea.Bool(false),
-			SecurityGroupId:  tea.String("sg-bp1c2remwvj2rpef5upy"),
-			VSwitchId:        tea.String("vsw-bp1f2g1unvama51zc04cd"),
-			IngressBandwidth: tea.Int64(bandwidth),
-			EgressBandwidth:  tea.Int64(bandwidth),
-		})
+			RestartPolicy:   tea.String("Never"),
+			Cpu:             tea.Float32(0.25),
+			Memory:          tea.Float32(0.5),
+			SpotStrategy:    tea.String("SpotAsPriceGo"),
+			AutoCreateEip:   tea.Bool(false),
+			SecurityGroupId: tea.String("sg-bp1c2remwvj2rpef5upy"),
+			VSwitchId:       tea.String("vsw-bp1f2g1unvama51zc04cd"),
+			// IngressBandwidth: tea.Int64(bandwidth),
+			// EgressBandwidth:  tea.Int64(bandwidth),
+		}
+		if _, ok := param.Exp2WorkerIndexMap[int64(meta.NodeID)]; !ok {
+			createContainerGroupRequest.IngressBandwidth = tea.Int64(bandwidth)
+			createContainerGroupRequest.EgressBandwidth = tea.Int64(bandwidth)
+			log.Info().Int64("bandwidth", bandwidth).Int("NodeID", meta.NodeID).Msg("set bandwidth")
+		} else {
+			log.Info().Int("NodeID", meta.NodeID).Msg("not set bandwidth")
+		}
+
+		result, err := common.EciClient.CreateContainerGroup(createContainerGroupRequest)
 		if err != nil {
 			log.Fatal().Err(err).Msg("CreateContainerGroupRequest failed")
 		}
@@ -394,6 +408,8 @@ func ECIDeploy(
 					MasterUrl: fmt.Sprintf("http://%v:2412%d", masterIp, worker.NodeIndex),
 					MasterId:  int64(worker.NodeIndex),
 					SlaveId:   int64(worker.WorkerIndex),
+
+					Exp2Workers: param.Exp2WorkerIndexMap,
 				})
 				if err != nil {
 					log.Warn().Err(err).Int("nodeIndex", int(worker.NodeIndex)).Int("workerIndex", int(worker.WorkerIndex)).Msg("failed to call PutWorkersNetInfo")

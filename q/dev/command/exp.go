@@ -29,12 +29,19 @@ func runExp1() {
 }
 
 func runExp2() {
-	Exp2RunOnce(&Exp2Param{
-		Press:       1000,
-		N:           4,
-		EciNum:      1,
-		LatencyMock: false,
-	})
+	pressList := []int{1000, 1000000}
+	nList := []int{4, 8, 16, 32, 64}
+
+	for _, press := range pressList {
+		for _, n := range nList {
+			Exp2RunOnce(&Exp2Param{
+				Press:       press,
+				N:           n,
+				EciNum:      1,
+				LatencyMock: false,
+			})
+		}
+	}
 }
 
 func (cmd *ExpCMD) Run() error {

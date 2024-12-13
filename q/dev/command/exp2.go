@@ -42,10 +42,17 @@ func Exp2RunOnce(param *Exp2Param) {
 
 	log.Info().Msg("Exp2CaseCMD")
 
+	// 1, 2, 3 ...
+	workerIndexMap := make(map[int64]string, 0)
+	for i := 1; i <= param.EciNum; i++ {
+		workerIndexMap[int64(i)] = ""
+	}
+
 	// 80000 交易 * 512B/交易 * 3 = 120MB
 	w, proxyClient := ECIDeploy(param.N+param.EciNum, 1, make(chan struct{}), &ECIParam{
-		Bandwidth:   12.5,
-		LatencyMock: param.LatencyMock,
+		Bandwidth:          12.5,
+		LatencyMock:        param.LatencyMock,
+		Exp2WorkerIndexMap: workerIndexMap,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
 
@@ -57,17 +64,10 @@ func Exp2RunOnce(param *Exp2Param) {
 		clients[int(w.NodeIndex)] = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
 	}
 
-	// 1, 2, 3 ...
-	workerIndexMap := make(map[int64]string, 0)
-	for i := 1; i <= param.EciNum; i++ {
-		workerIndexMap[int64(i)] = ""
-	}
-
 	for _, c := range clients {
 		go func(c qrpc.WorkerSlave) {
 			_, err := c.Exp2Start(context.Background(), &qrpc.Exp2StartRequest{
 				Press:   int64(param.Press),
-				Workers: workerIndexMap,
 			})
 
 			if err != nil {
