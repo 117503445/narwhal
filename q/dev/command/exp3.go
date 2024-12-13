@@ -39,7 +39,7 @@ func Exp3RunOnce(param *Exp3Param) {
 
 	goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-proxy:%v", expID), goutils.WithCwd("./assets/fc-proxy"))
 
-	log.Info().Msg("Exp2CaseCMD")
+	log.Info().Msg("Exp3CaseCMD")
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
 	w, proxyClient := ECIDeploy(param.N, 1, make(chan struct{}), &ECIParam{
