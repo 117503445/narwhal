@@ -60,6 +60,6 @@ func runExp3() {
 }
 
 func (cmd *ExpCMD) Run() error {
-	runExp3()
+	runExp2()
 	return nil
 }

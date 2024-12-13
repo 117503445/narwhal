@@ -131,6 +131,7 @@ func Exp3RunOnce(param *Exp3Param) {
 		"debug_press":        param.Press,
 		"debug_n":            param.N,
 		"debug_latency_mock": param.LatencyMock,
+		"debug_func":         "Exp3RunOnce",
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to WriteJSON")

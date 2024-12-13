@@ -67,7 +67,7 @@ func Exp2RunOnce(param *Exp2Param) {
 	for _, c := range clients {
 		go func(c qrpc.WorkerSlave) {
 			_, err := c.Exp2Start(context.Background(), &qrpc.Exp2StartRequest{
-				Press:   int64(param.Press),
+				Press: int64(param.Press),
 			})
 
 			if err != nil {
@@ -134,6 +134,8 @@ func Exp2RunOnce(param *Exp2Param) {
 		"debug_n":            param.N,
 		"debug_ecinum":       param.EciNum,
 		"debug_latency_mock": param.LatencyMock,
+		"debug_func":         "Exp2RunOnce",
+		"debug_eci_num":      param.EciNum,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to WriteJSON")
