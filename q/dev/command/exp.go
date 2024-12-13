@@ -31,7 +31,7 @@ func runExp1() {
 func runExp2() {
 	pressList := []int{1000, 1000000}
 	nList := []int{4, 8, 16, 32, 64}
-	eciNumList := []int{1}
+	eciNumList := []int{2, 3}
 
 	for _, press := range pressList {
 		for _, n := range nList {
