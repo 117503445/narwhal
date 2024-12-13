@@ -410,6 +410,8 @@ func ECIDeploy(
 					SlaveId:   int64(worker.WorkerIndex),
 
 					Exp2Workers: param.Exp2WorkerIndexMap,
+					Ak: 		os.Getenv("ak"),
+					Sk: 		os.Getenv("sk"),
 				})
 				if err != nil {
 					log.Warn().Err(err).Int("nodeIndex", int(worker.NodeIndex)).Int("workerIndex", int(worker.WorkerIndex)).Msg("failed to call PutWorkersNetInfo")

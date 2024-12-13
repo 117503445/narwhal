@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"github.com/shirou/gopsutil/v4/cpu"
 
 	// "fmt"
@@ -145,6 +147,17 @@ func (s *Server) PutWorkersNetInfo(ctx context.Context, in *qrpc.WorkersNetInfo)
 				Exp2NodeClient = append(Exp2NodeClient, workers[0])
 			}
 		}
+	}
+
+	ak := in.Ak
+	if ak != "" {
+		sk := in.Sk
+
+		cfg := oss.LoadDefaultConfig().
+			WithCredentialsProvider(
+				credentials.NewStaticCredentialsProvider(ak, sk)).WithRegion("cn-hangzhou").WithEndpoint("oss-cn-hangzhou-internal.aliyuncs.com")
+
+		OssClient = oss.NewClient(cfg)
 	}
 
 	return &emptypb.Empty{}, nil

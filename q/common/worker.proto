@@ -49,6 +49,9 @@ service WorkerSlave {
   rpc Exp2PrimaryConfirmBatch(ExpBatchMeta) returns (google.protobuf.Empty); // node0 确认 batch
   // rpc Exp2GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
 
+  rpc Exp3Start(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp3RecvBatch(Exp3Batch) returns (google.protobuf.Empty);
+
   rpc ProxyRefresh(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -83,6 +86,12 @@ message ExpBatchMeta{
   string id = 1;
   google.protobuf.Timestamp SubmittedAt = 2;
   int64 TxNum = 3;
+}
+
+message Exp3Batch{
+  string id = 1;
+  int64 tx_num = 2;
+  string oss_name = 3;
 }
 
 
@@ -148,6 +157,8 @@ message WorkersNetInfo {
   int64 slave_id = 6;
 
   map<int64, string> exp2workers = 7; // key 是 workers 的 NodeID, value 不重要
+  string ak = 8;
+  string sk = 9;
 }
 
 message WorkerNetInfo {

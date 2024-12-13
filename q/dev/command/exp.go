@@ -44,7 +44,22 @@ func runExp2() {
 	}
 }
 
+func runExp3() {
+	pressList := []int{1000}
+	nList := []int{4}
+
+	for _, press := range pressList {
+		for _, n := range nList {
+			Exp3RunOnce(&Exp3Param{
+				Press:       press,
+				N:           n,
+				LatencyMock: false,
+			})
+		}
+	}
+}
+
 func (cmd *ExpCMD) Run() error {
-	runExp2()
+	runExp3()
 	return nil
 }
