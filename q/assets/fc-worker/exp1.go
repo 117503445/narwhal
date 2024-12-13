@@ -28,7 +28,7 @@ var Exp1TxSize = 128
 
 // Exp1GetMetrics(context.Context, *google_protobuf.Empty) (*Exp1Metrics, error)
 
-func Exp1ProduceBatch(req *qrpc.ExpStartRequest) {
+func Exp1ProduceBatch(press int) {
 	go func() {
 		// produce batch
 		for {
@@ -40,7 +40,7 @@ func Exp1ProduceBatch(req *qrpc.ExpStartRequest) {
 
 			// press: 每秒钟的预期 tps
 			// 预期每个批次耗费的毫秒数
-			msPerBatch := int(float64(Exp1BatchSize) * 1000 / float64(req.Press))
+			msPerBatch := int(float64(Exp1BatchSize) * 1000 / float64(press))
 
 			remain := msPerBatch - int(time.Since(start).Milliseconds())
 
@@ -61,7 +61,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 
 	go func() {
 		var err error
-		Exp1ProduceBatch(req)
+		Exp1ProduceBatch(int(req.Press))
 
 		const PROCESS_NUM = 1
 		for i := 0; i < PROCESS_NUM; i++ {
@@ -114,7 +114,7 @@ func (s *Server) Exp1P2PStart(ctx context.Context, req *qrpc.ExpStartRequest) (*
 
 	go func() {
 		// var err error
-		Exp1ProduceBatch(req)
+		Exp1ProduceBatch(int(req.Press))
 
 		const PROCESS_NUM = 1
 		for i := 0; i < PROCESS_NUM; i++ {

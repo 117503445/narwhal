@@ -41,6 +41,7 @@ services:
     init: true
   esi-del:
     image: 117503445/narwhal
+    container_name: esi-del
     env_file:
       - ./Docker/.env
     stdin_open: true

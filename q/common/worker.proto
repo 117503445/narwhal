@@ -43,6 +43,12 @@ service WorkerSlave {
   rpc Exp1P2PRecvBatch(ExpBatch) returns (google.protobuf.Empty);
   rpc Exp1GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
 
+  rpc Exp2Start(Exp2StartRequest) returns (google.protobuf.Empty);
+  rpc Exp2WorkerRecvBatch(ExpBatch) returns (google.protobuf.Empty); // worker 收到 node0 的 batch
+  rpc Exp2NodeRecvBatch(ExpBatch) returns (google.protobuf.Empty); // nodes 收到 worker 的 batch
+  rpc Exp2PrimaryConfirmBatch(ExpBatchMeta) returns (google.protobuf.Empty); // node0 确认 batch
+  // rpc Exp2GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
+
   rpc ProxyRefresh(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -50,6 +56,11 @@ message ExpStartRequest{
   string ak = 1;
   string sk = 2;
   int64 press = 3;
+}
+
+message Exp2StartRequest{
+  int64 press = 1;
+  map<int64, string> workers = 2; // key 是 workers 的 NodeID, value 不重要
 }
 
 message Exp1P2PGetBatchStatusRequest{

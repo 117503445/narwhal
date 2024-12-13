@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	// "net/http"
-	"os"
 	"q/qrpc"
 	"time"
 
@@ -16,20 +15,20 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type Exp1Param struct {
+type Exp2Param struct {
 	Press       int
-	Mode        string // broadcast or p2p
 	N           int
+	EciNum      int
 	LatencyMock bool
 }
 
-func Exp1RunOnce(param *Exp1Param) {
-	if param.Press == 0 || param.Mode == "" || param.N == 0 {
+func Exp2RunOnce(param *Exp2Param) {
+	if param.Press == 0 || param.N == 0 || param.EciNum == 0 {
 		log.Fatal().Msg("Press and Mode are required")
 	}
 
 	var err error
-	goutils.Exec("docker compose up -d", goutils.WithCwd("../"))
+	goutils.Exec("docker compose up -d --remove-orphans", goutils.WithCwd("../"))
 
 	goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
 
@@ -41,44 +40,43 @@ func Exp1RunOnce(param *Exp1Param) {
 
 	goutils.Exec(fmt.Sprintf("docker push registry.cn-hangzhou.aliyuncs.com/117503445/biye-proxy:%v", expID), goutils.WithCwd("./assets/fc-proxy"))
 
-	log.Info().Msg("Exp1CaseCMD")
+	log.Info().Msg("Exp2CaseCMD")
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
-	w, proxyClient := ECIDeploy(param.N, 1, make(chan struct{}), &ECIParam{
+	w, proxyClient := ECIDeploy(param.N+param.EciNum, 1, make(chan struct{}), &ECIParam{
 		Bandwidth:   12.5,
 		LatencyMock: param.LatencyMock,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
 
-	var client0 qrpc.WorkerSlave
+	// var client0 qrpc.WorkerSlave
 	// clients := make([]qrpc.WorkerSlave, 0)
 	time.Sleep(3 * time.Second)
+	clients := make(map[int]qrpc.WorkerSlave)
 	for _, w := range w.Workers {
-		// c := qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
-		// clients = append(clients, c)
-		if w.NodeIndex == 0 {
-			client0 = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
-			break
-		}
+		clients[int(w.NodeIndex)] = qrpc.NewWorkerSlaveProtobufClient(fmt.Sprintf("http://%s:9000", w.IntranetIp), proxyClient)
 	}
 
-	if param.Mode == "broadcast" {
-		_, err = client0.Exp1BoradcastStart(context.Background(), &qrpc.ExpStartRequest{
-			Ak:    os.Getenv("ak"),
-			Sk:    os.Getenv("sk"),
-			Press: int64(param.Press),
-		})
-	} else {
-		_, err = client0.Exp1P2PStart(context.Background(), &qrpc.ExpStartRequest{
-			Ak:    os.Getenv("ak"),
-			Sk:    os.Getenv("sk"),
-			Press: int64(param.Press),
-		})
+	// 1, 2, 3 ...
+	workerIndexMap := make(map[int64]string, 0)
+	for i := 1; i <= param.EciNum; i++ {
+		workerIndexMap[int64(i)] = ""
 	}
 
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to call Exp1BoradcastStart")
+	for _, c := range clients {
+		go func(c qrpc.WorkerSlave) {
+			_, err := c.Exp2Start(context.Background(), &qrpc.Exp2StartRequest{
+				Press:   int64(param.Press),
+				Workers: workerIndexMap,
+			})
+
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to call Exp2Start")
+			}
+		}(c)
 	}
+
+	client0 := clients[0]
 
 	oldTpsList := make([]float64, 0)
 	oldLatencyList := make([]float64, 0)
@@ -117,7 +115,7 @@ func Exp1RunOnce(param *Exp1Param) {
 
 	tps := oldTpsList[len(oldTpsList)-1]
 	latency := oldLatencyList[len(oldLatencyList)-1]
-	log.Info().Float64("tps", tps).Float64("latency", latency).Msg("Exp1CaseCMD Done")
+	log.Info().Float64("tps", tps).Float64("latency", latency).Msg("Exp2CaseCMD Done")
 
 	dirRoot, err := goutils.FindGitRepoRoot()
 	if err != nil {
@@ -133,8 +131,9 @@ func Exp1RunOnce(param *Exp1Param) {
 		"debug_tps_list":     oldTpsList, // for debug
 		"debug_latency_list": oldLatencyList,
 		"debug_press":        param.Press,
-		"debug_mode":         param.Mode,
 		"debug_n":            param.N,
+		"debug_ecinum":       param.EciNum,
+		"debug_latency_mock": param.LatencyMock,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to WriteJSON")
@@ -143,44 +142,4 @@ func Exp1RunOnce(param *Exp1Param) {
 	ECIDelete(w)
 
 	RefreshExpID()
-}
-
-const EXP_BATCH_SIZE = 10 * 1024 * 1024
-
-// ExpMetricsCalc 计算 TPS 和 延迟, 0 代表无效
-func ExpMetricsCalc(batches []*qrpc.ExpBatchMeta, latenciesMS []int64) (float64, float64) {
-	return ExpMetricsTps(batches), ExpMetricsLatency(latenciesMS)
-}
-
-// ExpMetricsTps 计算 TPS
-func ExpMetricsTps(batches []*qrpc.ExpBatchMeta) float64 {
-	// log.Info().Interface("batches", batches).Msg("ExpMetricsTps")
-	if len(batches) == 0 {
-		return 0
-	}
-	dur := batches[len(batches)-1].SubmittedAt.AsTime().Sub(batches[0].SubmittedAt.AsTime())
-	if dur.Seconds() == 0 {
-		return 0
-	}
-	txNum := 0
-	for _, b := range batches {
-		txNum += int(b.TxNum)
-	}
-	tps := float64(txNum) / dur.Seconds()
-	return tps
-}
-
-// ExpMetricsLatency 计算延迟
-func ExpMetricsLatency(latenciesMS []int64) float64 {
-	if len(latenciesMS) == 0 {
-		return 0
-	}
-	var sum int64
-	for _, l := range latenciesMS {
-		sum += l
-	}
-
-	dur := time.Duration(sum / int64(len(latenciesMS)) * int64(time.Millisecond))
-
-	return dur.Seconds()
 }

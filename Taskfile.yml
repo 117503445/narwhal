@@ -5,7 +5,7 @@ tasks:
     desc: "The default task"
     dir: q
     cmds:
-      - go-task exp-1
+      - go-task exp
 
   build:
     desc: "Build"
@@ -46,9 +46,9 @@ tasks:
   ding:
     cmds:
       - curl "https://message-pusher.ali.117503445.top/push/root?title=Done&description=Done&content=Done&channel=ding&token=T8eRGoAV9VpP&channel"
-  exp-1:
-    desc: "exp-1"
+  exp:
+    desc: "exp"
     dir: q
     cmds:
-      - go run . exp-1
+      - go run . exp
       - go-task ding
