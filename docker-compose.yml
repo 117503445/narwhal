@@ -36,6 +36,7 @@ services:
     volumes:
         - ./:/workspace
         - /var/run/docker.sock:/var/run/docker.sock
+        - q-dev-vscode:/root/.vscode-server
     stdin_open: true
     tty: true
     init: true
@@ -52,3 +53,4 @@ services:
 
 volumes:
   narwhal-coding-dev-vsc:
+  q-dev-vscode:

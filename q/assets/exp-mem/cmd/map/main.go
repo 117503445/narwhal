@@ -1,6 +1,7 @@
 package main
 
 import (
+	"exp-mem/internal/common"
 	"os"
 	"strconv"
 	"time"
@@ -15,7 +16,7 @@ func main() {
 
 	m := make(map[string]interface{})
 	pressStr := os.Getenv("PRESS")
-	press := 10000
+	press := common.DefaultPress
 	if pressStr != "" {
 		press, err = strconv.Atoi(pressStr)
 		if err != nil {

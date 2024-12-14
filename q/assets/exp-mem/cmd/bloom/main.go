@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/117503445/goutils"
-	"github.com/bits-and-blooms/bloom"
-	"github.com/rs/zerolog/log"
+	"exp-mem/internal/common"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/117503445/goutils"
+	"github.com/bits-and-blooms/bloom"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -16,7 +18,7 @@ func main() {
 	filters := make([]*bloom.BloomFilter, 0)
 
 	pressStr := os.Getenv("PRESS")
-	press := 10000
+	press := common.DefaultPress
 	if pressStr != "" {
 		press, err = strconv.Atoi(pressStr)
 		if err != nil {

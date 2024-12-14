@@ -34,9 +34,9 @@ func Exp1ProduceBatch(press int) {
 		for {
 			start := time.Now()
 			id := goutils.UUID4()
+			Exp1SetBatchCreated(id)
 			batchesChan <- id
 
-			Exp1SetBatchCreated(id)
 
 			// press: 每秒钟的预期 tps
 			// 预期每个批次耗费的毫秒数
@@ -94,12 +94,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 						log.Info().Int("pid", pid).Str("batchID", batchID).Msg("sending batch to one client success")
 					}
 					latency := Exp1GetBatchLatency(batchID).Milliseconds()
-					Exp1AddLatency(latency)
 
-					Exp1AddBatchMeta(&qrpc.ExpBatchMeta{
-						SubmittedAt: timestamppb.Now(),
-						TxNum:       int64(Exp1BatchSize),
-					})
 
 					//
 
@@ -142,6 +137,14 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 						}
 
 					}
+
+					latency = Exp1GetBatchLatency(batchID).Milliseconds()
+					Exp1AddLatency(latency)
+
+					Exp1AddBatchMeta(&qrpc.ExpBatchMeta{
+						SubmittedAt: timestamppb.Now(),
+						TxNum:       int64(Exp1BatchSize),
+					})
 
 					// // log.Info().Msg("sending batch to one client success")
 					// if ckpN > 0 {
