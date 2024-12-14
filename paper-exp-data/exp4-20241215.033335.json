@@ -1,0 +1,107 @@
+[
+    {
+        "Seconds": 0,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 1,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 2,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 3,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 4,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 5,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 6,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 7,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 8,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 9,
+        "RssBytes": 12128256,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 10,
+        "RssBytes": 12623872,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 11,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 12,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 13,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 14,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 15,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 16,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 17,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 18,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 19,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    },
+    {
+        "Seconds": 20,
+        "RssBytes": 12230656,
+        "Bin": "exp-bloom"
+    }
+]

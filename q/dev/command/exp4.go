@@ -15,9 +15,20 @@ func Exp4RunOnce() {
 	goutils.Exec("go build -o exp-bloom ./cmd/bloom/main.go", goutils.WithCwd("./assets/exp-mem"))
 	goutils.Exec("go build -o exp-lunwen ./cmd/lunwen/main.go", goutils.WithCwd("./assets/exp-mem"))
 
-	bins := []string{"exp-map", "exp-bloom", "exp-lunwen"}
+	bins := []string{"exp-bloom", "exp-lunwen", "exp-map"}
+
+	press := 100000
+
+	type record struct {
+		Seconds  int
+		RssBytes int
+		Bin      string
+	}
+	result := make([]record, 0)
+
 	for _, bin := range bins {
 		cmd := exec.Command(fmt.Sprintf("./assets/exp-mem/%s", bin))
+		cmd.Env = append(cmd.Env, fmt.Sprintf("PRESS=%d", press))
 
 		// Start the command but do not wait for it to complete.
 		if err := cmd.Start(); err != nil {
@@ -28,7 +39,7 @@ func Exp4RunOnce() {
 		pid := cmd.Process.Pid
 		fmt.Printf("Started subprocess with PID: %d\n", pid)
 
-		for i := 0; i < 60; i++ {
+		for i := 0; i < 30; i++ {
 			// Give some time for the subprocess to fully start up.
 			time.Sleep(1 * time.Second) // 可能需要根据实际情况调整这个时间
 
@@ -39,11 +50,21 @@ func Exp4RunOnce() {
 			}
 
 			// Print out the memory information.
-			fmt.Printf("Subprocess Memory Info - RSS (Resident Set Size): %d bytes\n", memInfo.RSS)
+			fmt.Printf("%d - Subprocess Memory Info - RSS (Resident Set Size): %d bytes\n", i, memInfo.RSS)
 			// fmt.Printf("Subprocess Memory Info - VMS (Virtual Memory Size): %d bytes\n", memInfo.VMS)
+			result = append(result, record{
+				Seconds:  i,
+				RssBytes: int(memInfo.RSS),
+				Bin:      bin,
+			})
+			if i%10 == 0 {
+				err = goutils.WriteJSON(fmt.Sprintf("../paper-exp-data/exp4-%s.json", expID), result)
+				if err != nil {
+					log.Error().Err(err).Msg("WriteJSON")
+				}
+			}
 		}
 
-		break
 	}
 }
 
