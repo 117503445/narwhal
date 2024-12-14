@@ -17,7 +17,7 @@ func runExp1() {
 	// test ckpn
 	pressList = []int{1000}
 	nList = []int{4}
-	ckpNList = []int{0, 1, 50}
+	ckpNList = []int{1, 2, 10, 50}
 	modeList = []string{"broadcast"}
 
 	for _, press := range pressList {
@@ -77,7 +77,11 @@ func runExp3() {
 	}
 }
 
+func runExp4(){
+	Exp4RunOnce()
+}
+
 func (cmd *ExpCMD) Run() error {
-	runExp1()
+	runExp4()
 	return nil
 }
