@@ -31,7 +31,7 @@ func Exp1RunOnce(param *Exp1Param) {
 
 	var err error
 	goutils.Exec("docker build -t 117503445/narwhal .", goutils.WithCwd("../"))
-	goutils.Exec("docker compose up -d --remove-orphans", goutils.WithCwd("../"))
+	// goutils.Exec("docker compose up -d --remove-orphans", goutils.WithCwd("../"))
 
 	goutils.Exec("docker compose exec -T q-dev /workspace/q/script/build.sh", goutils.WithCwd("../"))
 

@@ -62,7 +62,7 @@ func Exp1ProduceBatch(press int) {
 const ExecuteTime = time.Millisecond * 40
 
 func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartRequest) (*emptypb.Empty, error) {
-	log.Info().Msg("Exp1BoradcastStart")
+	log.Info().Interface("req", req).Msg("Exp1BoradcastStart")
 	Exp1SetIsMaster(true)
 	// exp1pendingBlocks = int(req.Ckpn)
 
@@ -104,7 +104,7 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 					//
 
 					if req.Ckpn > 0 {
-						mockExecuteTime := normalDistribution(float64(latency)*0.9, float64(latency)*0.2)
+						mockExecuteTime := normalDistribution(float64(latency)*0.98, float64(latency)*0.4)
 						if mockExecuteTime < 0 {
 							mockExecuteTime = 0
 						}

@@ -301,6 +301,7 @@ func ECIDeploy(
 
 		cStop := make(chan struct{})
 		go func(stop chan struct{}) {
+			curExpID := expID
 			// collect log
 			for {
 				select {
@@ -316,7 +317,7 @@ func ECIDeploy(
 						log.Error().Err(err).Msg("DescribeContainerLogRequest failed")
 					}
 					if result.Body != nil && result.Body.Content != nil {
-						goutils.WriteText(fmt.Sprintf("%s/%s/%s-%d-%d.log", dirLogs, expID, containerGroupName, meta.NodeID, meta.WorkerID), *result.Body.Content)
+						goutils.WriteText(fmt.Sprintf("%s/%s/%s-%d-%d.log", dirLogs, curExpID, containerGroupName, meta.NodeID, meta.WorkerID), *result.Body.Content)
 					}
 					if nodeCount < 32 {
 						time.Sleep(time.Second * 10)
