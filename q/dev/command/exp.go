@@ -15,9 +15,10 @@ func runExp1() {
 	ckpNList := []int{0, 1, 4, 10, 20, 50, 100}
 
 	// test ckpn
-	pressList = []int{1000, 1000000}
+	pressList = []int{1000}
 	nList = []int{4}
-	ckpNList = []int{0, 1, 4, 8}
+	ckpNList = []int{0, 1, 50}
+	modeList = []string{"broadcast"}
 
 	for _, press := range pressList {
 		for _, ckpN := range ckpNList {

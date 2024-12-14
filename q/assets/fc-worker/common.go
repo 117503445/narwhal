@@ -16,6 +16,10 @@ func normalDistribution(mean, stddev float64) float64 {
 }
 
 func sleepForLatencyMock() {
+	if !LatencyMock {
+		return
+	}
+
 	// 模拟延迟
 	mean := 40.0
 	stddev := 2.5

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
+	// "strings"
 
 	// "strings"
 	"sync"
@@ -537,9 +537,9 @@ func (r *DeleteECICMD) Run() error {
 		// result.Body.ContainerGroups
 		for _, containerGroup := range result.Body.ContainerGroups {
 			log.Info().Interface("containerGroup", containerGroup.ContainerGroupId).Msg("containerGroup")
-			if strings.Contains(*containerGroup.ContainerGroupName, "proxy") {
-				continue
-			}
+			// if strings.Contains(*containerGroup.ContainerGroupName, "proxy") {
+			// 	continue
+			// }
 
 			ids = append(ids, *containerGroup.ContainerGroupId)
 		}

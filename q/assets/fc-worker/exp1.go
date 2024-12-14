@@ -61,12 +61,12 @@ func Exp1ProduceBatch(press int) {
 
 const ExecuteTime = time.Millisecond * 40
 
+var exp1pendingTimeList []int = make([]int, 0) // 需要等待的时间
+
 func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartRequest) (*emptypb.Empty, error) {
 	log.Info().Interface("req", req).Msg("Exp1BoradcastStart")
 	Exp1SetIsMaster(true)
 	// exp1pendingBlocks = int(req.Ckpn)
-
-	var exp1pendingTimeList []int = make([]int, 0) // 需要等待的时间
 
 	go func() {
 		var err error
@@ -113,33 +113,34 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 
 						log.Info().Ints("exp1pendingTimeList", exp1pendingTimeList).Msg("pre exp1pendingTimeList")
 
-						l := int(latency)
-						// 对于 exp1pendingTimeList，从第一个元素开始
-						for i := range exp1pendingTimeList {
-							if l < exp1pendingTimeList[i] {
-								exp1pendingTimeList[i] -= l
-								break
-							} else {
-								exp1pendingTimeList[i] = 0
-								l -= exp1pendingTimeList[i]
-							}
-						}
-						// 移除 exp1pendingTimeList 中为 0 的元素
-						newList := make([]int, 0)
-						for _, v := range exp1pendingTimeList {
-							if v > 0 {
-								newList = append(newList, v)
-							}
-						}
-						exp1pendingTimeList = newList
-						log.Info().Ints("exp1pendingTimeList", exp1pendingTimeList).Msg("post exp1pendingTimeList")
-
 						if len(exp1pendingTimeList) >= int(req.Ckpn) {
 							log.Info().Int("pid", pid).Str("batchID", batchID).Int("pendingTime", exp1pendingTimeList[0]).Msg("sleep")
 							time.Sleep(time.Duration(exp1pendingTimeList[0]) * time.Millisecond)
 							// 移除 exp1pendingTimeList 中的第一个元素
 							exp1pendingTimeList = exp1pendingTimeList[1:]
+						} else {
+							l := int(latency)
+							// 对于 exp1pendingTimeList，从第一个元素开始
+							for i := range exp1pendingTimeList {
+								if l < exp1pendingTimeList[i] {
+									exp1pendingTimeList[i] -= l
+									break
+								} else {
+									exp1pendingTimeList[i] = 0
+									l -= exp1pendingTimeList[i]
+								}
+							}
+							// 移除 exp1pendingTimeList 中为 0 的元素
+							newList := make([]int, 0)
+							for _, v := range exp1pendingTimeList {
+								if v > 0 {
+									newList = append(newList, v)
+								}
+							}
+							exp1pendingTimeList = newList
+							log.Info().Ints("exp1pendingTimeList", exp1pendingTimeList).Msg("post exp1pendingTimeList")
 						}
+
 					}
 
 					// // log.Info().Msg("sending batch to one client success")
