@@ -51,8 +51,8 @@ func runExp2() {
 }
 
 func runExp3() {
-	pressList := []int{1000}
-	nList := []int{64}
+	pressList := []int{1000, 1000000}
+	nList := []int{4, 8, 16, 32, 64}
 
 	for _, press := range pressList {
 		for _, n := range nList {
@@ -66,6 +66,6 @@ func runExp3() {
 }
 
 func (cmd *ExpCMD) Run() error {
-	runExp2()
+	runExp3()
 	return nil
 }
