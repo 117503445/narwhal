@@ -55,9 +55,18 @@ func Exp1ProduceBatch(press int) {
 	}()
 }
 
+// var pendingBatchIDList []string = make([]string, 0)
+// var pendingBatchIDListCond = sync.NewCond(&sync.Mutex{})
+// var ckpN = 0
+
+const ExecuteTime = time.Millisecond * 40
+
 func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartRequest) (*emptypb.Empty, error) {
 	log.Info().Msg("Exp1BoradcastStart")
 	Exp1SetIsMaster(true)
+	// exp1pendingBlocks = int(req.Ckpn)
+
+	var exp1pendingTimeList []int = make([]int, 0) // 需要等待的时间
 
 	go func() {
 		var err error
@@ -69,6 +78,8 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 				for batchID := range batchesChan {
 					log.Info().Str("batchID", batchID).Int("pid", pid).Msg("sending batch")
 					payload := make([]byte, Exp1TxSize*Exp1BatchSize)
+
+					// add batchID to pendingBatchIDList
 
 					for _, otherClient := range s.otherClients {
 						_, err = otherClient.Exp1BoradcastRecvBatch(context.Background(), &qrpc.ExpBatch{
@@ -90,7 +101,56 @@ func (s *Server) Exp1BoradcastStart(ctx context.Context, req *qrpc.ExpStartReque
 						TxNum:       int64(Exp1BatchSize),
 					})
 
-					// log.Info().Msg("sending batch to one client success")
+					//
+
+					if req.Ckpn > 0 {
+						mockExecuteTime := normalDistribution(float64(latency)*0.9, float64(latency)*0.2)
+						if mockExecuteTime < 0 {
+							mockExecuteTime = 0
+						}
+						log.Info().Int("pid", pid).Str("batchID", batchID).Int("mockExecuteTime", int(mockExecuteTime)).Int("latency", int(latency)).Msg("mockExecuteTime")
+						exp1pendingTimeList = append(exp1pendingTimeList, int(mockExecuteTime))
+
+						log.Info().Ints("exp1pendingTimeList", exp1pendingTimeList).Msg("pre exp1pendingTimeList")
+
+						l := int(latency)
+						// 对于 exp1pendingTimeList，从第一个元素开始
+						for i := range exp1pendingTimeList {
+							if l < exp1pendingTimeList[i] {
+								exp1pendingTimeList[i] -= l
+								break
+							} else {
+								exp1pendingTimeList[i] = 0
+								l -= exp1pendingTimeList[i]
+							}
+						}
+						// 移除 exp1pendingTimeList 中为 0 的元素
+						newList := make([]int, 0)
+						for _, v := range exp1pendingTimeList {
+							if v > 0 {
+								newList = append(newList, v)
+							}
+						}
+						exp1pendingTimeList = newList
+						log.Info().Ints("exp1pendingTimeList", exp1pendingTimeList).Msg("post exp1pendingTimeList")
+
+						if len(exp1pendingTimeList) >= int(req.Ckpn) {
+							log.Info().Int("pid", pid).Str("batchID", batchID).Int("pendingTime", exp1pendingTimeList[0]).Msg("sleep")
+							time.Sleep(time.Duration(exp1pendingTimeList[0]) * time.Millisecond)
+							// 移除 exp1pendingTimeList 中的第一个元素
+							exp1pendingTimeList = exp1pendingTimeList[1:]
+						}
+					}
+
+					// // log.Info().Msg("sending batch to one client success")
+					// if ckpN > 0 {
+					// 	// wait until len(pendingBatchIDList) < ckpN
+					// 	pendingBatchIDListCond.L.Lock()
+					// 	pendingBatchIDList = append(pendingBatchIDList, batchID)
+					// 	for len(pendingBatchIDList) >= ckpN {
+					// 		pendingBatchIDListCond.Wait()
+					// 	}
+					// 	pendingBatchIDListCond.L.Unlock()
 				}
 			}(i)
 		}

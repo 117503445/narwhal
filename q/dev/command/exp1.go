@@ -21,6 +21,7 @@ type Exp1Param struct {
 	Mode        string // broadcast or p2p
 	N           int
 	LatencyMock bool
+	CkpN        int
 }
 
 func Exp1RunOnce(param *Exp1Param) {
@@ -68,12 +69,14 @@ func Exp1RunOnce(param *Exp1Param) {
 			Ak:    os.Getenv("ak"),
 			Sk:    os.Getenv("sk"),
 			Press: int64(param.Press),
+			Ckpn:  int64(param.CkpN),
 		})
 	} else {
 		_, err = client0.Exp1P2PStart(context.Background(), &qrpc.ExpStartRequest{
 			Ak:    os.Getenv("ak"),
 			Sk:    os.Getenv("sk"),
 			Press: int64(param.Press),
+			Ckpn:  int64(param.CkpN),
 		})
 	}
 
@@ -136,6 +139,7 @@ func Exp1RunOnce(param *Exp1Param) {
 		"debug_press":        param.Press,
 		"debug_mode":         param.Mode,
 		"debug_n":            param.N,
+		"debug_ckpn":         param.CkpN,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to WriteJSON")

@@ -22,17 +22,13 @@ service WorkerSlave {
   rpc PutWorkersNetInfoPublic(WorkersNetInfo) returns (google.protobuf.Empty);
 
   rpc OssCase0Start(google.protobuf.Empty) returns (google.protobuf.Empty);
-
   rpc OssCase0SendBatch(OssCase0Batch) returns (google.protobuf.Empty);
-
   rpc OssCase0GetMetrics(google.protobuf.Empty) returns (OssCase0Metrics);
 
   rpc OssCase1Start(OssCase1StartRequest) returns (google.protobuf.Empty);
-
   rpc OssCase1GetMetrics(google.protobuf.Empty) returns (OssCase1Metrics);
 
   rpc OssCase2Start(OssCase1StartRequest) returns (google.protobuf.Empty);
-
   rpc OssCase2SendBatch(OssCase2Batch) returns (google.protobuf.Empty);
   rpc OssCase2GetMetrics(google.protobuf.Empty) returns (OssCase2Metrics);
 
@@ -59,6 +55,7 @@ message ExpStartRequest{
   string ak = 1;
   string sk = 2;
   int64 press = 3;
+  int64 ckpn = 4;
 }
 
 message Exp2StartRequest{

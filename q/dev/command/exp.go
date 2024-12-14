@@ -4,25 +4,34 @@ type ExpCMD struct {
 }
 
 func runExp1() {
-	// pressList := []int{1000, 1000000}
-	pressList := []int{1000000}
+	pressList := []int{1000, 1000000}
+	// pressList := []int{1000000}
 	nList := []int{4, 8, 16, 32, 64}
 	// nList := []int{64}
-	// modeList := []string{ "p2p"}
-	modeList := []string{"p2p", "broadcast"}
-	// mode := "p2p"
-	latencyMock := true
+	// modeList := []string{"p2p", "broadcast"}
+	modeList := []string{"broadcast"}
+	latencyMock := false
+
+	ckpNList := []int{0, 1, 4, 10, 20, 50, 100}
+
+	// test ckpn
+	pressList = []int{1000, 1000000}
+	nList = []int{4}
+	ckpNList = []int{0, 1, 4, 8}
 
 	for _, press := range pressList {
-		for _, mode := range modeList {
-			for _, n := range nList {
-				Exp1RunOnce(&Exp1Param{
-					Press: press,
-					// Mode:  "p2p",
-					Mode:        mode,
-					N:           n,
-					LatencyMock: latencyMock,
-				})
+		for _, ckpN := range ckpNList {
+			for _, mode := range modeList {
+				for _, n := range nList {
+					Exp1RunOnce(&Exp1Param{
+						Press: press,
+						// Mode:  "p2p",
+						Mode:        mode,
+						N:           n,
+						LatencyMock: latencyMock,
+						CkpN:        ckpN,
+					})
+				}
 			}
 		}
 	}
@@ -68,6 +77,6 @@ func runExp3() {
 }
 
 func (cmd *ExpCMD) Run() error {
-	runExp3()
+	runExp1()
 	return nil
 }
