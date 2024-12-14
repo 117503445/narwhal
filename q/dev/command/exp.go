@@ -12,13 +12,13 @@ func runExp1() {
 	modeList := []string{"broadcast"}
 	latencyMock := false
 
-	ckpNList := []int{0, 1, 4, 10, 20, 50, 100}
+	ckpNList := []int{0, 1, 4, 10, 20}
 
 	// test ckpn
-	pressList = []int{1000}
-	nList = []int{4}
-	ckpNList = []int{1, 2, 10, 50}
-	modeList = []string{"broadcast"}
+	// pressList = []int{1000}
+	// nList = []int{4}
+	// ckpNList = []int{1, 2, 10, 50}
+	// modeList = []string{"broadcast"}
 
 	for _, press := range pressList {
 		for _, ckpN := range ckpNList {
@@ -26,7 +26,6 @@ func runExp1() {
 				for _, n := range nList {
 					Exp1RunOnce(&Exp1Param{
 						Press: press,
-						// Mode:  "p2p",
 						Mode:        mode,
 						N:           n,
 						LatencyMock: latencyMock,
@@ -82,6 +81,6 @@ func runExp4(){
 }
 
 func (cmd *ExpCMD) Run() error {
-	runExp4()
+	runExp1()
 	return nil
 }
