@@ -29,12 +29,12 @@ func runExp1() {
 }
 
 func runExp2() {
-	// pressList := []int{1000000}
-	pressList := []int{1000, 100000}
-	// nList := []int{32, 64}
-	nList := []int{4, 8, 16, 32, 64}
-	eciNumList := []int{4}
-	// eciNumList := []int{2, 3}
+	pressList := []int{1000000}
+	// pressList := []int{1000, 100000}
+	nList := []int{4, 8, 16}
+	// nList := []int{4, 8, 16, 32, 64}
+	// eciNumList := []int{4}
+	eciNumList := []int{2, 3}
 
 	for _, eciNum := range eciNumList {
 		for _, press := range pressList {
@@ -67,6 +67,6 @@ func runExp3() {
 }
 
 func (cmd *ExpCMD) Run() error {
-	runExp3()
+	runExp2()
 	return nil
 }
