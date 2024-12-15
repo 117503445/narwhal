@@ -39,7 +39,7 @@ func Exp4RunOnce() {
 		pid := cmd.Process.Pid
 		fmt.Printf("Started subprocess with PID: %d\n", pid)
 
-		for i := 0; i < 30; i++ {
+		for i := 0; i < 3600 * 4; i++ {
 			// Give some time for the subprocess to fully start up.
 			time.Sleep(1 * time.Second) // 可能需要根据实际情况调整这个时间
 

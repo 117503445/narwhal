@@ -353,5 +353,55 @@
         "Seconds": 10,
         "RssBytes": 193343488,
         "Bin": "exp-map"
+    },
+    {
+        "Seconds": 11,
+        "RssBytes": 194129920,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 12,
+        "RssBytes": 195440640,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 13,
+        "RssBytes": 197144576,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 14,
+        "RssBytes": 205713408,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 15,
+        "RssBytes": 216428544,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 16,
+        "RssBytes": 225013760,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 17,
+        "RssBytes": 234057728,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 18,
+        "RssBytes": 378630144,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 19,
+        "RssBytes": 380203008,
+        "Bin": "exp-map"
+    },
+    {
+        "Seconds": 20,
+        "RssBytes": 380727296,
+        "Bin": "exp-map"
     }
 ]
