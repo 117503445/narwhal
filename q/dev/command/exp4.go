@@ -16,6 +16,7 @@ func Exp4RunOnce() {
 	goutils.Exec("go build -o exp-lunwen ./cmd/lunwen/main.go", goutils.WithCwd("./assets/exp-mem"))
 
 	bins := []string{"exp-bloom", "exp-lunwen", "exp-map"}
+	// bins := []string{"exp-bloom", "exp-map"}
 
 	press := 100000
 
@@ -39,7 +40,10 @@ func Exp4RunOnce() {
 		pid := cmd.Process.Pid
 		fmt.Printf("Started subprocess with PID: %d\n", pid)
 
-		for i := 0; i < 3600 * 4; i++ {
+		runSeconds := 3600 * 4
+		// runSeconds := 60
+
+		for i := 0; i < runSeconds; i++ {
 			// Give some time for the subprocess to fully start up.
 			time.Sleep(1 * time.Second) // 可能需要根据实际情况调整这个时间
 
