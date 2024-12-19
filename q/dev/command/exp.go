@@ -25,7 +25,7 @@ func runExp1() {
 			for _, mode := range modeList {
 				for _, n := range nList {
 					Exp1RunOnce(&Exp1Param{
-						Press: press,
+						Press:       press,
 						Mode:        mode,
 						N:           n,
 						LatencyMock: latencyMock,
@@ -60,27 +60,33 @@ func runExp2() {
 }
 
 func runExp3() {
-	pressList := []int{100000}
+	pressList := []int{1000, 1000000}
+
+	bandwidthList := []float64{10, 12.5, 25, 50, 100}
+
 	// pressList := []int{1000,100000}
-	// nList := []int{4, 8, 16, 32, 64}
-	nList := []int{64}
+	nList := []int{4, 8, 16, 32, 64}
+	// nList := []int{64}
 
 	for _, press := range pressList {
-		for _, n := range nList {
-			Exp3RunOnce(&Exp3Param{
-				Press:       press,
-				N:           n,
-				LatencyMock: false,
-			})
+		for _, bandwidth := range bandwidthList {
+			for _, n := range nList {
+				Exp3RunOnce(&Exp3Param{
+					Press:       press,
+					N:           n,
+					LatencyMock: false,
+					Bandwidth:   bandwidth,
+				})
+			}
 		}
 	}
 }
 
-func runExp4(){
+func runExp4() {
 	Exp4RunOnce()
 }
 
 func (cmd *ExpCMD) Run() error {
-	runExp4()
+	runExp3()
 	return nil
 }

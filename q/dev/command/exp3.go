@@ -19,6 +19,7 @@ type Exp3Param struct {
 	Press       int
 	N           int
 	LatencyMock bool
+	Bandwidth   float64
 }
 
 func Exp3RunOnce(param *Exp3Param) {
@@ -44,7 +45,7 @@ func Exp3RunOnce(param *Exp3Param) {
 
 	// 80000 交易 * 512B/交易 * 3 = 120MB
 	w, proxyClient := ECIDeploy(param.N, 1, make(chan struct{}), &ECIParam{
-		Bandwidth:   12.5,
+		Bandwidth:   param.Bandwidth,
 		LatencyMock: param.LatencyMock,
 	})
 	log.Info().Interface("w", w).Msg("DeployECI")
@@ -133,6 +134,7 @@ func Exp3RunOnce(param *Exp3Param) {
 		"debug_n":            param.N,
 		"debug_latency_mock": param.LatencyMock,
 		"debug_func":         "Exp3RunOnce",
+		"debug_bandwidth":    param.Bandwidth,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to WriteJSON")
