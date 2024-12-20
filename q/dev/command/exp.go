@@ -64,13 +64,13 @@ func runExp3() {
 	pressList := []int{500000}
 
 	// bandwidthList := []float64{10, 12.5, 25, 50, 100}
-	bandwidthList := []float64{12.5, 25, 50, 100}
+	bandwidthList := []float64{100}
 	// bandwidthList := []float64{ 25, 50, 100}
 	// bandwidthList := []float64{ 80}
 
 	// pressList := []int{1000,100000}
-	nList := []int{4, 8, 16, 32, 64}
-	// nList := []int{64}
+	// nList := []int{4, 8, 16, 32, 64}
+	nList := []int{64}
 
 	for _, press := range pressList {
 		for _, bandwidth := range bandwidthList {
