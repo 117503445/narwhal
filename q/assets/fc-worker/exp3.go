@@ -39,7 +39,7 @@ func (s *Server) Exp3Start(ctx context.Context, req *qrpc.ExpStartRequest) (*emp
 					Body:   bytes.NewReader(payload),
 				})
 				if err != nil {
-					log.Fatal().Err(err).Msg("failed to call PutObject")
+					log.Error().Err(err).Msg("failed to call PutObject")
 					return
 				}
 

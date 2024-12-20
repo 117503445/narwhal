@@ -61,7 +61,7 @@ func runExp2() {
 
 func runExp3() {
 	// pressList := []int{1000, 1000000}
-	pressList := []int{ 200000}
+	pressList := []int{ 1000000}
 
 	// bandwidthList := []float64{10, 12.5, 25, 50, 100}
 	bandwidthList := []float64{12.5, 25, 50, 100}
@@ -75,6 +75,10 @@ func runExp3() {
 	for _, press := range pressList {
 		for _, bandwidth := range bandwidthList {
 			for _, n := range nList {
+				if bandwidth == 12.5 {
+					continue
+				}
+
 				Exp3RunOnce(&Exp3Param{
 					Press:       press,
 					N:           n,
