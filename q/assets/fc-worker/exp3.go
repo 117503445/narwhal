@@ -25,65 +25,77 @@ func (s *Server) Exp3Start(ctx context.Context, req *qrpc.ExpStartRequest) (*emp
 
 	go func() {
 		batchIndex := 0
-		for batchID := range batchesChan {
-			batchIndex++
-			go func(batchID string, batchIndex int) {
-				log.Info().Str("batchID", batchID).Int("batchIndex", batchIndex).Msg("send batch to worker")
-				payload := make([]byte, Exp1TxSize*Exp1BatchSize)
+		var batchIndexLock sync.Mutex
 
-				ossName := fmt.Sprintf("test-block-%d-%d", s.masterId, batchIndex)
+		const PROCESS_NUM = 10
+		for i := 0; i < PROCESS_NUM; i++ {
+			go func(pid int) {
+				for batchID := range batchesChan {
+					batchIndexLock.Lock()
+					batchIndex++
+					currentBatchIndex := batchIndex
+					batchIndexLock.Unlock()
+					
+					f := func(batchID string, batchIndex int) {
+						log.Info().Str("batchID", batchID).Int("batchIndex", batchIndex).Msg("send batch to worker")
+						payload := make([]byte, Exp1TxSize*Exp1BatchSize)
 
-				_, err := OssClient.PutObject(context.TODO(), &oss.PutObjectRequest{
-					Bucket: oss.Ptr("biye1024"),
-					Key:    oss.Ptr(ossName),
-					Body:   bytes.NewReader(payload),
-				})
-				if err != nil {
-					log.Error().Err(err).Msg("failed to call PutObject")
-					return
-				}
+						ossName := fmt.Sprintf("test-block-%d-%d", s.masterId, batchIndex)
 
-				count := 0
-				var countLock sync.Mutex
-
-				var wg sync.WaitGroup
-				for _, c := range s.otherClients {
-					wg.Add(1)
-					go func(c qrpc.WorkerSlave) {
-						defer wg.Done()
-						_, err := c.Exp3RecvBatch(context.Background(), &qrpc.Exp3Batch{
-							Id:      batchID,
-							TxNum:   int64(Exp1BatchSize),
-							OssName: ossName,
+						_, err := OssClient.PutObject(context.TODO(), &oss.PutObjectRequest{
+							Bucket: oss.Ptr("biye1024"),
+							Key:    oss.Ptr(ossName),
+							Body:   bytes.NewReader(payload),
 						})
 						if err != nil {
-							log.Error().Err(err).Msg("Exp3RecvBatch failed")
+							log.Error().Err(err).Msg("failed to call PutObject")
+							return
 						}
 
-						countLock.Lock()
-						count++
-						if count+2 == BFTQuorumSize(len(s.otherClients)+1) {
-							go func(id string) {
-								log.Info().Str("batchID", id).Msg("Quorum nodes received")
-								latency := Exp1GetBatchLatency(id).Milliseconds()
-								Exp1AddLatency(latency)
+						count := 0
+						var countLock sync.Mutex
 
-								Exp1AddBatchMeta(&qrpc.ExpBatchMeta{
-									SubmittedAt: timestamppb.Now(),
-									TxNum:       int64(Exp1BatchSize),
+						var wg sync.WaitGroup
+						for _, c := range s.otherClients {
+							wg.Add(1)
+							go func(c qrpc.WorkerSlave) {
+								defer wg.Done()
+								_, err := c.Exp3RecvBatch(context.Background(), &qrpc.Exp3Batch{
+									Id:      batchID,
+									TxNum:   int64(Exp1BatchSize),
+									OssName: ossName,
 								})
+								if err != nil {
+									log.Error().Err(err).Msg("Exp3RecvBatch failed")
+								}
 
-							}(batchID)
+								countLock.Lock()
+								count++
+								if count+2 == BFTQuorumSize(len(s.otherClients)+1) {
+									go func(id string) {
+										log.Info().Str("batchID", id).Msg("Quorum nodes received")
+										latency := Exp1GetBatchLatency(id).Milliseconds()
+										Exp1AddLatency(latency)
+
+										Exp1AddBatchMeta(&qrpc.ExpBatchMeta{
+											SubmittedAt: timestamppb.Now(),
+											TxNum:       int64(Exp1BatchSize),
+										})
+
+									}(batchID)
+								}
+								countLock.Unlock()
+
+							}(c)
 						}
-						countLock.Unlock()
+						wg.Wait()
 
-					}(c)
+					}
+
+					f(batchID, currentBatchIndex)
 				}
-				wg.Wait()
-
-			}(batchID, batchIndex)
+			}(i)
 		}
-
 	}()
 
 	return &emptypb.Empty{}, nil
