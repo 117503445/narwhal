@@ -62,7 +62,8 @@ func runExp2() {
 func runExp3() {
 	pressList := []int{1000, 1000000}
 
-	bandwidthList := []float64{10, 12.5, 25, 50, 100}
+	// bandwidthList := []float64{10, 12.5, 25, 50, 100}
+	bandwidthList := []float64{ 25, 50, 100}
 
 	// pressList := []int{1000,100000}
 	nList := []int{4, 8, 16, 32, 64}
