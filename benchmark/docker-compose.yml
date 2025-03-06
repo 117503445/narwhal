@@ -1,0 +1,14 @@
+services:
+  benchmark-dev:
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    volumes:
+        - ./:/workspace
+        - benchmark-dev-vsc:/root/.vscode-server
+    stdin_open: true
+    tty: true
+    network_mode: host
+
+volumes:
+  benchmark-dev-vsc:

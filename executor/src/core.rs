@@ -16,9 +16,11 @@ use tokio::{
 };
 use tracing::debug;
 use types::{
-    metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber,
+    metered_channel, Batch, BatchDigest, CertificateDigest, ReconfigureNotification, SequenceNumber, ExecutorClient, ExecuteInfo,
 };
-
+use tonic::{transport::Channel};
+// use backtrace::Backtrace;
+// use std::panic;
 #[cfg(test)]
 #[path = "tests/executor_tests.rs"]
 pub mod executor_tests;
@@ -40,6 +42,9 @@ pub struct Core<State: ExecutionState> {
     tx_output: Sender<ExecutorOutput<State>>,
     /// The indices ensuring we do not execute twice the same transaction.
     execution_indices: ExecutionIndices,
+
+    execute_height: i32,
+    q_client: ExecutorClient<Channel>,
 }
 
 impl<State: ExecutionState> Drop for Core<State> {
@@ -64,6 +69,15 @@ where
         tx_output: Sender<ExecutorOutput<State>>,
     ) -> JoinHandle<()> {
         tokio::spawn(async move {
+
+            // 读取 QEXECUTOR_ADDR 环境变量
+
+            let addr = std::env::var("QEXECUTOR_ADDR").unwrap_or_else(|_| "http://qexecutor_0:50051".to_string());
+
+            let q_client = ExecutorClient::connect(addr).await.map_err(|e| {
+                SubscriberError::ClientExecutionError(format!("Failed to connect to executor: {e}"))
+            }).expect("Failed to connect to executor");
+
             let execution_indices = execution_state
                 .load_execution_indices()
                 .await
@@ -75,6 +89,8 @@ where
                 rx_subscriber,
                 tx_output,
                 execution_indices,
+                execute_height: 0,
+                q_client,
             }
             .run()
             .await
@@ -84,6 +100,7 @@ where
 
     /// Main loop listening to new certificates and execute them.
     async fn run(&mut self) -> SubscriberResult<()> {
+        println!("QHT executor run");
         loop {
             tokio::select! {
                 // Execute all transactions associated with the consensus output message.
@@ -142,7 +159,7 @@ where
                 .execution_indices
                 .check_next_batch_index(index as SequenceNumber)
             {
-                self.execute_batch(message, certificate_id, *digest, total_batches)
+                self.execute_batch(message, certificate_id, *digest, total_batches, index)
                     .await?;
             }
         }
@@ -156,6 +173,7 @@ where
         certificate_id: CertificateDigest,
         batch_digest: BatchDigest,
         total_batches: usize,
+        index: usize,
     ) -> SubscriberResult<()> {
         // The store should now hold all transaction data referenced by the input certificate.
         let transactions = match self.store.read((certificate_id, batch_digest)).await? {
@@ -172,8 +190,24 @@ where
             }
         };
 
+        self.execute_height += 1;
+
         // Execute every transaction in the batch.
         let total_transactions = transactions.len();
+        println!("共识的这一批交易数量: {}, index: {}, batch_digest: {}", total_transactions, index, batch_digest);
+
+        let request = tonic::Request::new(ExecuteInfo{
+            consensus_round: consensus_output.consensus_index as i32,
+            execute_height: self.execute_height,
+            tx_num: total_transactions as i32,
+        });
+
+        let response = self.q_client.put_execute_info(request).await.map_err(|e| {
+            SubscriberError::ClientExecutionError(format!("Failed to execute transaction: {e}"))
+        })?;
+        println!("response: {:?}", response);
+
+
         for (index, transaction) in transactions.into_iter().enumerate() {
             // Skip transactions that we already executed (after crash-recovery).
             if self

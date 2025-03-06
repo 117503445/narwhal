@@ -1,0 +1,56 @@
+# docker-compose.yml
+
+services:
+  narwhal-coding-dev:
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    volumes:
+        - ./:/workspace
+        - narwhal-coding-dev-vsc:/root/.vscode-server
+    stdin_open: true
+    tty: true
+  builder:
+    build:
+      context: ./
+      dockerfile: ./Docker/Dockerfile.builder
+    container_name: narwhal-builder
+    volumes:
+        - ./:/workspace
+    # stdin_open: true
+    # tty: true
+    init: true
+  fc:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.fc
+    volumes:
+        - ./:/workspace
+    stdin_open: true
+    tty: true
+    init: true
+  q-dev:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.q
+    volumes:
+        - ./:/workspace
+        - /var/run/docker.sock:/var/run/docker.sock
+        - q-dev-vscode:/root/.vscode-server
+    stdin_open: true
+    tty: true
+    init: true
+  esi-del:
+    image: 117503445/narwhal
+    container_name: esi-del
+    env_file:
+      - ./Docker/.env
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ./bin/q delete-eci
+
+
+volumes:
+  narwhal-coding-dev-vsc:
+  q-dev-vscode:

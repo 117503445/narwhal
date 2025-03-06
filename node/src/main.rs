@@ -30,6 +30,24 @@ use tracing::info;
 use tracing::subscriber::set_global_default;
 #[cfg(feature = "benchmark")]
 use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+// use chrono::Local;
+use tracing_subscriber::{
+    self,
+    fmt::{format::Writer, time::FormatTime},
+};
+
+struct LocalTimer;
+
+fn east8() -> Option<chrono::FixedOffset> {
+    chrono::FixedOffset::east_opt(8 * 3600)
+}
+
+impl FormatTime for LocalTimer {
+    fn format_time(&self, w: &mut Writer<'_>) -> std::fmt::Result {
+        let now = chrono::Utc::now().with_timezone(&east8().unwrap());
+        write!(w, "{}", now.format("%FT%T%.3f"))
+    }
+}
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -37,6 +55,9 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 
 #[tokio::main]
 async fn main() -> Result<(), eyre::Report> {
+    println!("qht Starting Narwhal...");
+    dbg!("qht Narwhal starting...");
+
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about("A research implementation of Narwhal and Tusk.")
@@ -167,11 +188,12 @@ fn setup_benchmark_telemetry(
 
     let env_filter = EnvFilter::try_from_default_env().unwrap_or(filter);
 
-    let timer = tracing_subscriber::fmt::time::UtcTime::rfc_3339();
+    // let timer = tracing_subscriber::fmt::time::UtcTime::rfc_3339();
     let subscriber_builder = tracing_subscriber::fmt::Subscriber::builder()
         .with_env_filter(env_filter)
-        .with_timer(timer)
-        .with_ansi(false);
+        .with_timer(LocalTimer)
+        .with_ansi(false)
+        .with_line_number(true);
     let subscriber = subscriber_builder.with_writer(std::io::stderr).finish();
     set_global_default(subscriber).expect("Failed to set subscriber");
     Ok(())
@@ -274,5 +296,6 @@ async fn run(
 async fn analyze(mut rx_output: Receiver<(SubscriberResult<Vec<u8>>, SerializedTransaction)>) {
     while let Some(_message) = rx_output.recv().await {
         // NOTE: Notify the user that its transaction has been processed.
+        // println!("Transaction processed, length: {}", _message.0.len());
     }
 }

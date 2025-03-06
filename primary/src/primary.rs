@@ -597,10 +597,13 @@ impl WorkerToPrimary for WorkerReceiverHandler {
         &self,
         request: Request<BincodeEncodedPayload>,
     ) -> Result<Response<Empty>, Status> {
+        info!("qht WorkerReceiverHandler.send_message");
         let message: WorkerPrimaryMessage = request
             .into_inner()
             .deserialize()
             .map_err(|e| Status::invalid_argument(e.to_string()))?;
+
+
 
         match message {
             WorkerPrimaryMessage::OurBatch(digest, worker_id) => {

@@ -417,6 +417,9 @@ impl Transactions for TxReceiverHandler {
         &self,
         request: tonic::Request<tonic::Streaming<types::TransactionProto>>,
     ) -> Result<tonic::Response<types::Empty>, tonic::Status> {
+
+        info!("qht TxReceiverHandler.submit_transaction_stream");
+
         let mut transactions = request.into_inner();
 
         while let Some(Ok(txn)) = transactions.next().await {
@@ -481,6 +484,8 @@ impl WorkerToWorker for WorkerReceiverHandler {
         &self,
         request: Request<BincodeEncodedPayload>,
     ) -> Result<Response<Empty>, Status> {
+        // info!("qht WorkerReceiverHandler.send_message");
+
         let message: WorkerMessage = request
             .get_ref()
             .deserialize()

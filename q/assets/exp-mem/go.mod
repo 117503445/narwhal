@@ -1,0 +1,15 @@
+module exp-mem
+
+go 1.23.4
+
+require (
+	github.com/117503445/goutils v0.0.0-20241208164233-fe236427e42b // indirect
+	github.com/bits-and-blooms/bloom v2.0.3+incompatible // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/willf/bitset v1.1.11 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+)

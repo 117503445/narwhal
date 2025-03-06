@@ -1,0 +1,54 @@
+version: '3'
+
+tasks:
+  default:
+    desc: "The default task"
+    dir: q
+    cmds:
+      - go-task exp
+
+  build:
+    desc: "Build"
+    dir: q
+    cmds:
+      - go run . build
+
+  send-req:
+    desc: "send-req"
+    dir: Docker
+    cmds:
+      - docker compose exec -T worker_0 ./bin/q send-req
+
+  oss-case-0:
+    desc: "2 个 ECI 之间的内网通信"
+    dir: q
+    cmds:
+      - go run . oss-case-0
+  oss-case-1:
+    desc: "ECI 上传到 OSS"
+    dir: q
+    cmds:
+      - go run . oss-case-1
+  oss-case-2:
+    desc: "4 个 ECI 基于 OSS 进行共识"
+    dir: q
+    cmds:
+      - go run . oss-case-2
+  q:
+    desc: "Run the q command help"
+    dir: q
+    cmds:
+      - go run . --help
+  proto:
+    desc: "Generate the proto files"
+    cmds:
+      - docker compose exec -T q-dev /workspace/q/script/proto.sh
+  ding:
+    cmds:
+      - curl "https://message-pusher.ali.117503445.top/push/root?title=Done&description=Done&content=Done&channel=ding&token=T8eRGoAV9VpP&channel"
+  exp:
+    desc: "exp"
+    dir: q
+    cmds:
+      - go run . exp
+      - go-task ding

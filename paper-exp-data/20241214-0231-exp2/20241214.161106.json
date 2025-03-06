@@ -1,0 +1,32 @@
+{
+    "debug_eci_num": 3,
+    "debug_ecinum": 3,
+    "debug_func": "Exp2RunOnce",
+    "debug_latency_list": [
+        3.668,
+        8.089,
+        12.539,
+        17.031,
+        21.509,
+        25.945,
+        29.448,
+        32.098
+    ],
+    "debug_latency_mock": false,
+    "debug_n": 4,
+    "debug_press": 1000000,
+    "debug_tps_list": [
+        117037.01556751879,
+        107493.47697456948,
+        104286.99128591013,
+        102660.71235862517,
+        101694.1230426412,
+        101048.12313907871,
+        100583.2674241957,
+        100230.96197370584
+    ],
+    "figure": "batchsize 对 txpool 的影响",
+    "latency": 32.098,
+    "line": "broadcast-txpool",
+    "tps": 100230.96197370584
+}

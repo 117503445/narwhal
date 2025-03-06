@@ -1,0 +1,31 @@
+{
+    "debug_bandwidth": 50,
+    "debug_func": "Exp3RunOnce",
+    "debug_latency_list": [
+        0.074,
+        0.54,
+        1.264,
+        2.069,
+        2.904,
+        3.75,
+        4.594,
+        5.449
+    ],
+    "debug_latency_mock": false,
+    "debug_n": 8,
+    "debug_press": 500000,
+    "debug_tps_list": [
+        471152.9682113589,
+        430404.22849637194,
+        416949.01108306187,
+        410698.2173721894,
+        406586.6542986613,
+        403918.1465608822,
+        402005.9890013186,
+        400708.59974371066
+    ],
+    "figure": "batchsize 对 txpool 的影响",
+    "latency": 5.449,
+    "line": "broadcast-txpool",
+    "tps": 400708.59974371066
+}
