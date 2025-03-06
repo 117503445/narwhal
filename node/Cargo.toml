@@ -29,6 +29,7 @@ tracing-subscriber = { version = "0.3.15", features = ["time", "env-filter"] }
 url = "2.2.2"
 axum = "0.5.15"
 itertools = "0.10.3"
+chrono = "0.4.19"
 
 config = { path = "../config" }
 consensus = { path = "../consensus" }
@@ -53,6 +54,7 @@ structopt = "0.3.26"
 test_utils = { path = "../test_utils" }
 
 [features]
+default = ["benchmark"]
 benchmark = ["worker/benchmark", "primary/benchmark", "consensus/benchmark"]
 dhat-heap = ["dhat"]    # if you are doing heap profiling
 

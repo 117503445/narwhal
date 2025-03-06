@@ -311,6 +311,14 @@ where
                             tracing::info!("Committed {} -> {:?}", certificate.header, digest);
                         }
 
+
+                        for digest in certificate.header.payload.keys() {
+                            println!("QHT Committed {} -> {:?}", certificate.header, digest);
+                            // NOTE: This log entry is used to compute performance.
+                            // tracing::info!("Committed {} -> {:?}", certificate.header, digest);
+                        }
+
+
                         self.tx_primary
                             .send(certificate.clone())
                             .await

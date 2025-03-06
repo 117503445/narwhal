@@ -110,6 +110,7 @@ impl QuorumWaiter {
                             Some(stake) = wait_for_quorum.next() => {
                                 total_stake += stake;
                                 if total_stake >= threshold {
+                                    tracing::info!("qht Quorum reached for batch");
                                     if self.tx_batch.send(serialized).await.is_err() {
                                         tracing::debug!("{}", DagError::ShuttingDown);
                                     }

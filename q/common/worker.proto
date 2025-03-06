@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package narwhal;
+option go_package = "./qrpc";
+
+// 导入 Empty 消息类型
+import "google/protobuf/empty.proto";
+// import "google/protobuf/any.proto";
+
+service WorkerSlave {
+  rpc Start(google.protobuf.Empty) returns (StartResponse);
+  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc Exit(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // 要求 Slave 广播这个 batch
+  rpc PutBatch(PutBatchRequest) returns (google.protobuf.Empty);
+
+  // Slave To Slave，不需要再次广播
+  rpc ReceiveBatch(PutBatchRequest) returns (google.protobuf.Empty);
+
+  rpc PutWorkersNetInfo(WorkersNetInfo) returns (google.protobuf.Empty);
+  rpc PutWorkersNetInfoPublic(WorkersNetInfo) returns (google.protobuf.Empty);
+
+  rpc OssCase0Start(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc OssCase0SendBatch(OssCase0Batch) returns (google.protobuf.Empty);
+  rpc OssCase0GetMetrics(google.protobuf.Empty) returns (OssCase0Metrics);
+
+  rpc OssCase1Start(OssCase1StartRequest) returns (google.protobuf.Empty);
+  rpc OssCase1GetMetrics(google.protobuf.Empty) returns (OssCase1Metrics);
+
+  rpc OssCase2Start(OssCase1StartRequest) returns (google.protobuf.Empty);
+  rpc OssCase2SendBatch(OssCase2Batch) returns (google.protobuf.Empty);
+  rpc OssCase2GetMetrics(google.protobuf.Empty) returns (OssCase2Metrics);
+
+  rpc Exp1BoradcastStart(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp1BoradcastRecvBatch(ExpBatch) returns (google.protobuf.Empty);
+  rpc Exp1P2PStart(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp1P2PGetBatchStatus(Exp1P2PGetBatchStatusRequest) returns (Exp1P2PGetBatchStatusResponse);
+  rpc Exp1P2PRecvBatch(ExpBatch) returns (google.protobuf.Empty);
+  rpc Exp1GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
+
+  rpc Exp2Start(Exp2StartRequest) returns (google.protobuf.Empty);
+  rpc Exp2WorkerRecvBatch(ExpBatch) returns (google.protobuf.Empty); // worker 收到 node0 的 batch
+  rpc Exp2NodeRecvBatch(ExpBatch) returns (google.protobuf.Empty); // nodes 收到 worker 的 batch
+  rpc Exp2PrimaryConfirmBatch(ExpBatchMeta) returns (google.protobuf.Empty); // node0 确认 batch
+  // rpc Exp2GetMetrics(google.protobuf.Empty) returns (Exp1Metrics);
+
+  rpc Exp3Start(ExpStartRequest) returns (google.protobuf.Empty);
+  rpc Exp3RecvBatch(Exp3Batch) returns (google.protobuf.Empty);
+
+  rpc ProxyRefresh(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message ExpStartRequest{
+  string ak = 1;
+  string sk = 2;
+  int64 press = 3;
+  int64 ckpn = 4;
+}
+
+message Exp2StartRequest{
+  int64 press = 1;
+  // map<int64, string> workers = 2; // key 是 workers 的 NodeID, value 不重要
+}
+
+message Exp1P2PGetBatchStatusRequest{
+  string id = 1;
+  string worker = 2;
+}
+
+message Exp1P2PGetBatchStatusResponse{
+  string status = 1; // "give-me" "other-giving" "done"
+  string givingWorker = 2;
+}
+
+message ExpBatch{
+  string id = 1;
+  bytes payload = 2;
+  int64 tx_num = 3;
+}
+
+message ExpBatchMeta{
+  string id = 1;
+  google.protobuf.Timestamp SubmittedAt = 2;
+  int64 TxNum = 3;
+}
+
+message Exp3Batch{
+  string id = 1;
+  int64 tx_num = 2;
+  string oss_name = 3;
+}
+
+
+message Exp1Metrics{
+  repeated int64 LatenciesMS = 1; // 每个 batch 的延迟的毫秒数
+  repeated ExpBatchMeta BatchMetas = 2; // 每个 batch 的元数据
+}
+
+service WorkerMaster {
+  rpc BatchConfirmed(BatchMeta) returns (google.protobuf.Empty); // the digest of batch is confirmed
+}
+
+message OssCase0Batch {
+  string id = 1;
+  bytes payload = 2;
+}
+
+message OssCase2Batch {
+  string id = 1;
+  string url = 2;
+}
+
+import "google/protobuf/timestamp.proto";
+message OssCase0Metrics {
+  repeated OssCaseBatchMeta Batches = 1;
+}
+
+message OssCaseBatchMeta {
+  google.protobuf.Timestamp ReceivedAt = 1;
+  int64 Size = 2;
+}
+
+message OssCase1StartRequest{
+  string ak = 1;
+  string sk = 2;
+}
+
+message OssCase1Metrics {
+  int64 UploadDurMs = 1;
+  repeated OssCaseBatchMeta Downloads = 2;
+  repeated OssCaseBatchMeta Uploads = 3;
+}
+
+message OssCase2Metrics {
+  repeated OssCaseBatchMeta Batches = 1;
+}
+
+message StartResponse {
+    string msg = 1;
+}
+
+message PutBatchRequest {
+    string payload = 1;
+    string id = 2;
+}
+
+message WorkersNetInfo {
+  string exp_id = 1;
+  repeated WorkerNetInfo workers = 2;
+  string proxy = 3;
+  string master_url = 4;
+  int64 master_id = 5;
+  int64 slave_id = 6;
+
+  map<int64, string> exp2workers = 7; // key 是 workers 的 NodeID, value 不重要
+  string ak = 8;
+  string sk = 9;
+}
+
+message WorkerNetInfo {
+  string name = 1; // biyi-0-0
+  int64 nodeIndex = 2; // 0 for node0
+  int64 workerIndex = 3; // 0 for worker0
+  string internet_ip = 4;
+  string intranet_ip = 5;
+  string eciId = 6;
+}
+message BatchMeta{
+  string id = 1;
+}

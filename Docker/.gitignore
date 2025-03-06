@@ -1,4 +1,6 @@
 # ignore the generated dirs and files.
 validators-*/
+logs
 
-
+docker-compose.yml
+.env

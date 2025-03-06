@@ -1,5 +1,5 @@
 {
-    "batch_size": 500000,
+    "batch_size": 500000000,
     "block_synchronizer": {
         "certificates_synchronize_timeout": "2_000ms",
         "handler_certificate_deliver_timeout": "2_000ms",
@@ -13,9 +13,9 @@
     },
     "gc_depth": 50,
     "header_size": 1000,
-    "max_batch_delay": "200ms",
+    "max_batch_delay": "2ms",
     "max_concurrent_requests": 500000,
-    "max_header_delay": "2000ms",
+    "max_header_delay": "20ms",
     "sync_retry_delay": "10_000ms",
     "sync_retry_nodes": 3,
     "prometheus_metrics": {

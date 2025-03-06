@@ -54,6 +54,7 @@ impl ExecutionIndices {
 
     /// Check whether the input index is the next expected batch index.
     pub fn check_next_batch_index(&self, batch_index: SequenceNumber) -> bool {
+        println!("check_next_batch_index, batch_index: {}, next_batch_index: {}", batch_index, self.next_batch_index);
         batch_index == self.next_batch_index
     }
 

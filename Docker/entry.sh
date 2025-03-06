@@ -32,9 +32,14 @@ else
   fi
 fi
 
+echo "NODE_BIN=$NODE_BIN, PRIMARY_KEYS_PATH=$PRIMARY_KEYS_PATH, WORKER_KEYS_PATH=$WORKER_KEYS_PATH, COMMITTEE_PATH=$COMMITTEE_PATH, WORKERS_PATH=$WORKERS_PATH, PARAMETERS_PATH=$PARAMETERS_PATH, DATA_PATH=$DATA_PATH"
+
 # If this is a primary node, then run as primary
 if [[ "$NODE_TYPE" = "primary" ]]; then
   echo "Bootstrapping primary node"
+
+  LOG_PATH="/logs/validator-$VALIDATOR_ID-primary.log"
+  echo "" > $LOG_PATH
 
   $NODE_BIN $LOG_LEVEL run \
   --primary-keys $PRIMARY_KEYS_PATH \
@@ -43,9 +48,12 @@ if [[ "$NODE_TYPE" = "primary" ]]; then
   --workers $WORKERS_PATH \
   --store "${DATA_PATH}/validator-$VALIDATOR_ID/db-primary" \
   --parameters $PARAMETERS_PATH \
-  primary $CONSENSUS_DISABLED
+  primary > $LOG_PATH 2>&1
 elif [[ "$NODE_TYPE" = "worker" ]]; then
   echo "Bootstrapping new worker node with id $WORKER_ID"
+
+  LOG_PATH="/logs/validator-$VALIDATOR_ID-worker-$WORKER_ID.log"
+  echo "" > $LOG_PATH
 
   $NODE_BIN $LOG_LEVEL run \
   --primary-keys $PRIMARY_KEYS_PATH \
@@ -54,8 +62,23 @@ elif [[ "$NODE_TYPE" = "worker" ]]; then
   --workers $WORKERS_PATH \
   --store "${DATA_PATH}/validator-$VALIDATOR_ID/db-worker-$WORKER_ID" \
   --parameters $PARAMETERS_PATH \
-  worker --id $WORKER_ID
+  worker --id $WORKER_ID > $LOG_PATH 2>&1
+elif [[ "$NODE_TYPE" = "qexecutor" ]]; then
+  echo "Bootstrapping new qexecutor node with id $WORKER_ID"
+
+  LOG_PATH="/logs/validator-$EXECUTOR_ID-qexecutor.log"
+  echo "" > $LOG_PATH
+
+  ./bin/q executor > $LOG_PATH 2>&1
+elif [[ "$NODE_TYPE" = "q-worker-master" ]]; then
+  echo "Bootstrapping new worker-master node with id $WORKER_MASTER_ID"
+
+  LOG_PATH="/logs/validator-$WORKER_MASTER_ID-q-worker-master.log"
+  echo "" > $LOG_PATH
+
+  ./bin/q worker-master > $LOG_PATH 2>&1
 else
   echo "Unknown provided value for parameter: NODE_TYPE=$NODE_TYPE"
   exit 1
 fi
+
